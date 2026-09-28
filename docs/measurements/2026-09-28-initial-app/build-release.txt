@@ -1,0 +1,6 @@
+[0/1] Planning build
+Building for production...
+[0/2] Write swift-version--58304C5D6DBC2206.txt
+Build of product 'MyRedirector' complete! (0.14s)
+/Users/seijiro/Sync/sync_work/by-llms/my-redirector/dist/My Redirector.app: replacing existing signature
+/Users/seijiro/Sync/sync_work/by-llms/my-redirector/dist/My Redirector.app

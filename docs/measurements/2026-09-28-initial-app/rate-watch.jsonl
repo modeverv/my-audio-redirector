@@ -1,0 +1,2 @@
+{"devices":[{"actualRate":48000,"alive":1,"bufferFrames":512,"id":148,"name":"Fireface UCX II (24100500)","nominalRate":48000,"runningSomewhere":1,"uid":"RMEUSBDevice-130-24100500"},{"actualRate":48000,"alive":1,"bufferFrames":512,"id":152,"name":"Discrete4 USB","nominalRate":48000,"runningSomewhere":0,"uid":"com.antelope.23e5a27021121000.Discrete4 USB"}],"elapsedSeconds":0.085723042488098145,"event":"initial","time":"2026-09-28T07:47:42Z"}
+{"elapsedSeconds":30.041859030723572,"event":"finished","pollIntervalSeconds":0.25,"snapshots":1,"time":"2026-09-28T07:48:12Z"}

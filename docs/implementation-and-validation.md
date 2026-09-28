@@ -1,15 +1,15 @@
 # 実装と検証の進め方
 
-更新日: 2026-09-28。以下は計画であり、試験結果ではない。
+更新日: 2026-09-28。初期実装は完成し、ビルド・オフライン試験・GUIの初期操作を確認済み。以下のPhaseと受け入れ条件は、実機検証に向けた計画を含む。実施済みの範囲は末尾に分けて記録する。
 
 ## 1. Phase 0: ソフトウェアだけで経路が成立するか確認
 
 1. TotalMix・Discrete4の現在の設定を保存し、移行前の経路・FX・音量操作を記録する。
 2. モデル、driver/firmware、clock source、lock/sync、HAL nominal/actual rate、入出力のphysical/virtual stream format、bufferを同時に記録する。
-3. Discrete4の48 kHz動作申告とHAL 44.1 kHz報告の差を調べる。Aggregate結合時の入出力異常は別の症状として記録し、原因を断定しない。
+3. 当初はDiscrete4の48 kHz動作申告とHAL 44.1 kHz報告に差があった。現在の機器列挙ではRME・Discrete4とも48 kHzを取得できているが、変更元や再発条件は未特定として監視する。Aggregate結合時の入出力異常は別の症状として記録し、原因を断定しない。
 4. RME Loopbackを使わず、RMEの物理入力を個別に読む。既存のLoopbackが録音slotを置換したままになっていないことを確認する。復路は設定画面で選ぶRME host playbackのL/Rチャンネルへ送る。AES相当の11/12は初期候補にとどめ、現在のstream構成・ラベルとの対応を検証する。
 5. PC再生音は、既存の出力先device UIDとstreamを指定するCore Audio process tapを第一評価候補にする。`isMixdown=false`で元のチャンネルを保持し、各チャンネルに個別gainを持たせる。stereo global tapで最初から2chへ潰さない。`stream`はデバイスのstream indexであり、チャンネル番号ではない。実際のtap format・stream構成・チャンネル対応を読み取る。[Appleのdevice-stream tap](https://developer.apple.com/documentation/coreaudio/catapdescription/initexcludingprocesses:anddeviceuid:withstream:)
-6. Tapを読むためのprivate Aggregateは、PC captureの入れ物に用途を限定する。RMEとDiscrete4を束ねない。tapだけで構成できるか、clock anchorとなる単独deviceが必要かは未検証として、構成辞書・clock source・subdevice/subtap・drift compensation・追加input latencyを記録する。必要な構成がこの制約に収まらなければ不成立とする。[Appleのtap sample](https://developer.apple.com/documentation/coreaudio/capturing-system-audio-with-core-audio-taps)
+6. Tapを読むためのprivate Aggregateは、PC captureの入れ物に用途を限定する。初期実装はtap-only構成で、RMEとDiscrete4を束ねない。tap-only受信は短時間の無音実機試験で成立した。実信号の対応・実遅延は未検証として、構成辞書・clock source・subdevice/subtap・drift compensation・追加input latencyを記録する。単独deviceのclock anchor等が必要な場合も自動で追加せず、初期backendを不成立として再検討する。[Appleのtap sample](https://developer.apple.com/documentation/coreaudio/capturing-system-audio-with-core-audio-taps)
 7. 現在の5.1ch／DTMを含め、アプリの出力先が物理RMEなのか既存Aggregateなのかを調べる。実際の出力先を対象にしたtapで各PC出力チャンネルを区別して取れることを示す。物理RME宛てtapが既存Aggregate宛て音声も取れるとは仮定しない。自分のプロセスを除外して、選択したRME復路チャンネルへ返した音声を再取得しないことを確認する。自己音声除外をAESの選択やチャンネル番号に依存させない。
 8. 元のPC音声が直接RME出力にも流れる場合の二重出力を確認する。tapのmute behaviorについて、取得中、開始失敗、OFF、異常停止、アプリ終了の各状態で、どのprocess／streamの直接出力が止まり、いつ復帰するかを実測する。全PC音声を無条件にmuteする仕様にしない。
 9. Discrete4のDAW Record Loopbackで目的のFX後ミックスを読めるか検証する。FX、ミキサーフェーダー、master/monitor音量・muteの反映範囲を記録する。禁止対象のRME Loopbackとは別の機能である。
@@ -22,9 +22,9 @@
 
 ## 2. Phase 1: 診断と同期制御の試験
 
-まず音声を開始しない機器診断を実装する。UID、alive/running、チャンネル、stream形式、rate、buffer範囲、device/stream latency、safety offset、変更時刻を出力する。取得不能は未取得とし0で埋めない。
+音声を開始しない機器・stream列挙と診断CLIは実装済み。実機試験ではUID、alive/running、チャンネル、stream形式、rate、buffer範囲、device/stream latency、safety offset、変更時刻を必要に応じて補って記録する。取得不能は未取得とし0で埋めない。
 
-並行して、実機に依存しないSPSC FIFO・ASRC adapter・ドリフト制御を実装し、RME、PC capture、Discrete4の3つの仮想クロックで検証する。PC captureが複数の独立clock groupを持つ場合は、その数まで増やす。
+SPSC FIFO・ASRC adapter・ドリフト制御の初期実装と3つの仮想クロックによるオフライン試験は実施済み。次表は短い試験の合格だけで完了扱いにせず、引き続き満たすべき検証範囲を示す。PC captureが複数の独立clock groupを持つ場合は、その数まで増やす。
 
 | 入力条件 | 確認すること |
 | --- | --- |
@@ -55,20 +55,21 @@ R/PのSRC・PIはD4 callback、DのSRC・PIはRME callbackが所有する。同�
 
 PC tapがRMEと同じ出力deviceを対象としていても、同じclock・同じ配送位相と断定しない。timestampの対応、実レート差、tapの内部補正／遅延を検証して初めて共通clockへの統合を検討する。統合後も別callbackの到着差に対する受け渡し・位置合わせは必要であり、自動的に旧2 callback構成へ戻るとはしない。
 
-1. 両機器48 kHz / 要求64 framesを主目標とし、32/64/128 framesを最初の比較に含める。各機器の設定成功、読み戻し、実callback長を確認する。未対応値を別値へ黙って置換しない。
+1. 両機器48 kHz / 要求64 framesを主目標とし、16/32/64/128 framesを比較に含める。各機器の設定成功、読み戻し、実callback長を確認する。未対応値を別値へ黙って置換しない。
 2. RME物理入力→D4、PC capture→D4、D4→選択したRME host playback L/Rを別々に検証してから、全経路を同時に動かす。PC callback長は要求I/O値と一致すると仮定せず、実際の長さ・周期を記録する。
-3. R/P/D別FIFOの目標32/64/128 framesとSRC品質を記録し、過不足・補正比率・実遅延を観測する。I/Oサイズとは別変数として一つずつ比較する。PC capture固有の配送jitterに必要な待ちを旧RME Loopback経路から流用しない。
+3. R/P/D別FIFOの目標16/32/64/128 framesとSRC品質を記録し、過不足・補正比率・実遅延を観測する。I/Oサイズとは別変数として一つずつ比較する。PC capture固有の配送jitterに必要な待ちを旧RME Loopback経路から流用しない。
+   初期実装では各FIFO目標がRME／PC capture／Discrete4の最大実I/O buffer以上であることを開始条件にする。例えば最大実値が512なら3経路とも512以上を選ぶ。GUIには512/1024も用意し、条件不足では開始を拒否する。これは現実装の制限であり、FIFOとI/Oが常に同じ値でなければならない一般則や、安定性の保証ではない。
 4. 隣接my-lan-audio2で実I/O32と軽いcallback処理が確認できたため、32も最初から評価する。Discrete4側や双方向で同じ安定性になるかは別途試験する。
 5. libsamplerate Fastestを低遅延候補、Mediumを音質比較とする。既存プロジェクトのlinearを低CPU基準、必要ならApple Varispeedも比較する。linearを音質評価なしに製品既定へはしない。
 6. 通常運転中に無言でbufferやSRC品質を変えない。低遅延化は検証済み設定を明示選択する形にする。
 7. RME入力・PC出力の各gainを別々に操作し、意図したchannelだけが変化することを確認する。最大入力数と全フェーダー操作中の処理時間、FIFO、音切れ、実遅延、clipを測る。gain/mix自体のための追加block待ちは作らないが、PC capture経路の受け渡し・遅延は独立に計上する。
 8. tapを含む全callback、3個のASRC、必要な補助処理を実測する。隣接プロジェクトの32-frame動作、今回のSRC単体、旧20-source mix単体の測定を、新構成全体のCPU・遅延・安定性の証拠に置き換えない。
 
-開始・停止、capture権限拒否、いずれかの開始失敗、prime timeout、機器消失時の回収までGUIより先に確立する。3 producerを動かして出力は無音から始め、各経路のFIFO/SRCをprimeする。D4処理済み入力の生成を、往路がON表示になるまで止めるような循環待ちは作らない。復路が初期に無音でも有効frameならprimeに使える。故障時は全経路を停止し、全callback終了を確認するまでFIFO/SRCやtapを解放しない。
+開始・停止、capture権限拒否、いずれかの開始失敗、prime timeout、機器消失時の回収を、実機転送の合格条件として確認する。3 producerを動かして出力は無音から始め、各経路のFIFO/SRCをprimeする。D4処理済み入力の生成を、往路がON表示になるまで止めるような循環待ちは作らない。復路が初期に無音でも有効frameならprimeに使える。故障時は全経路を停止し、全callback終了を確認するまでFIFO/SRCやtapを解放しない。
 
 ## 4. Phase 3: ミックスとGUI
 
-エンジンの合格後、設定保存、RME入力／PC出力の個別gain/mute、Settings、1個のON/OFFボタンを載せる。機器・tap対象・チャンネル・buffer等の構造変更はOFF中のみ。gain/muteは動作中も変更可能。設定画面ではI/OサイズとR/P/D別FIFO目標をsamplesで変更し、48 kHz換算msも併記する。要求64、HAL実値、callback実長、実測遅延を区別する。RMEの物理入力数とPC captureのチャンネル数は別に表示し、合計20を共通上限にしない。
+設定保存、RME入力／PC出力の個別gain/mute/pan・stereo link、Settings、1個のON/OFFボタンは初期実装済み。GUIの表示と取得元選択を確認したが、音声処理中の操作は未検証。機器・tap対象・チャンネル・buffer等の構造変更はOFF中のみ。gain/muteは動作中も変更可能とする。設定画面ではI/OサイズとR/P/D別FIFO目標をsamplesで変更し、48 kHz換算msも併記する。要求64、HAL実値、callback実長、実測遅延を区別する。RMEの物理入力数とPC captureのチャンネル数は別に表示し、合計20を共通上限にしない。
 
 復路のRME host playback L/Rを設定画面で選択する。RME device UID、L/Rの1-basedチャンネル番号、streamとの対応と照合ラベルを保存し、起動・再接続時に再検証する。AES相当11/12を固定せず、現在のmappingで確認できたときの初期候補とする。保存先の欠落、方向違い、範囲外、L/R重複、mapping不一致ではOFFのまま理由を表示し、AES、Analog1/2、近い番号へ自動fallbackしない。
 
@@ -82,6 +83,7 @@ PC tapがRMEと同じ出力deviceを対象としていても、同じclock・同
 
 | buffer | 48 kHzでの1周期 |
 | --- | --- |
+| 16 frames | 0.33 ms |
 | 32 frames | 0.67 ms |
 | 64 frames | 1.33 ms |
 | 128 frames | 2.67 ms |
@@ -112,7 +114,7 @@ LadioCast比較は可能な限り同じsource、復路、rate、実buffer、cloc
 | 試験 | 合格の目安 |
 | --- | --- |
 | 最終構成 | RME Loopbackなし、RMEとDiscrete4間のS/PDIF・ADAT・同期ケーブルなし。両者を結合するAggregateなし。tap用private Aggregateの構成・clock・副作用を検証し、PCチャンネル別取得と往復経路が成立 |
-| 小バッファ | I/O要求64を両機器で読み戻し・callback確認。32も比較。設定したFIFO待ちを含め実遅延を別測定し、未達なら未達と報告 |
+| 小バッファ | I/O要求64を両機器で読み戻し・callback確認。16/32も比較。設定したFIFO待ちを含め実遅延を別測定し、未達なら未達と報告 |
 | 個別ミックス | RME物理入力とPC出力を独立に識別・gain操作。最大source数（実機形式が対応する場合20＋20）、gain/pan/muteの連続操作、meter表示中も同じ条件を維持。channelごとの追加block待ち・ASRCなし。clock group境界のFIFO／ASRCは別計上 |
 | 信号内容 | Computer Play1/2へ正しい左右・mixが届き、USB復路が目的のFX後音声。自分のRME出力bufferでは選択L/R以外をゼロ化。TotalMixから意図した物理端子へ届き、意図しない二重出力なし |
 | 復路先の選択・保存 | AES相当と別の有効なhost出力ペアでL/Rを識別。OFF中の変更、再起動後の復元、旧出力先に残留音声がないことを確認。欠落／不正／mapping変更ではOFFで説明し、自動fallbackなし。host選択とTotalMix物理ルートを別々に検証 |
@@ -142,4 +144,21 @@ LadioCast比較は可能な限り同じsource、復路、rate、実buffer、cloc
 
 ## 8. 現在の成果と未実施
 
-要件整理、一次資料調査、読み取りによる機器列挙、チャンネル対応確認、隣接my-lan-audio2の参照、SRC・ミックスのオフライン単体計測、設計文書の更新まで完了。アプリ実装、機器設定・配線変更、音出し、LadioCastとの測定比較、実機の長時間試験は未実施。
+初期ソースとして、SwiftUI GUI、HAL／Tap backend、C++ミックス・SPSC FIFO・ASRCと制御、設定保存、診断・取得テスト用CLIを実装した。Releaseビルドとアプリ生成に成功している。
+
+| 実施項目 | 確認できた範囲 |
+| --- | --- |
+| Coreオフライン試験 | 28条件×各60秒相当の仮想クロック試験を含めPASS。設定、prime、gain/mute、fault時無音、SPSC並行処理等を検査。実機の連続運転試験ではない。[記録](measurements/2026-09-28-initial-app/core-tests.txt) |
+| 設定テスト | JSON往復保存、初期mute、stereo pan、未知schema拒否、UI専用キーとengine設定の分離を確認。[記録](measurements/2026-09-28-initial-app/configuration-tests.txt) |
+| 読み取り専用機器列挙 | RME 20入力／20出力、Discrete4 16入力／16出力、ともに48 kHz。5.1chの出力stream 0は20ch。これは信号を流したchannel識別試験ではない。[記録](measurements/2026-09-28-initial-app/inventory.json) |
+| GUI初期操作 | メイン画面起動、⌘,で設定表示、RME・Discrete4・PC取得元5.1ch／stream 0の選択を確認。音声取得・転送は開始していない |
+
+ミックスタブへの切替で約10秒の応答停止がユーザー操作・自動操作の両方で確認された。画面表示だけをもってGUI正常とは扱わず、レイアウト負荷を調査した。[調査・再確認](measurements/2026-09-28-initial-app/gui-investigation.md)
+
+Tapの無音取得は20ch・48 kHz・64 framesで10秒成功（7508 callbacks、fault 0）。[記録](measurements/2026-09-28-initial-app/tap-probe.json)。ユーザーが機器間S/PDIF/ADAT全撤去とD4 Internal/48 kHzを確認した。
+
+Tapの実信号のchannel対応・自己音声除外、必要な処理後ミックスのUSB復路、最終物理出力、16/32/64 framesでの長時間安定動作、実遅延、LadioCast比較、8/24時間運転、実機での切断・復旧は未検証。機器内部のrouting・clockや配線をこの試験で変更したものではない。
+
+48 kHz・64 frames・FIFO64の全mute双方向I/Oは10秒成功。RME/PC/Return全producerが進行し、primedMask7、FIFO不足/あふれ0、fault0、出力peak0、停止後cleanupと512-frame復元を確認した。開始途中のPC Tap epoch変更を観測したため、物理2台→Tapの開始順序と全start完了後のarmを実装した。[詳細](measurements/2026-09-28-initial-app/README.md)
+
+16/32 framesも要求値・読み戻し・実callback長の一致を確認した。全muteでI/O16/FIFO32とI/O32/FIFO32は各60秒成功。I/O16/FIFO16は約28秒でRME FIFO不足、I/O64/FIFO64は約37秒でPC FIFO不足を検出して停止。後者はPC FIFOだけ128へ増やすと60秒成功した。短い成功を常用安定性や全経路の実遅延と混同しない。[実測一覧](measurements/2026-09-28-initial-app/README.md)

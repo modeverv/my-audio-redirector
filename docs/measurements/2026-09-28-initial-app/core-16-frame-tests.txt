@@ -1,0 +1,8 @@
+PASS negative sample origins, zero crossing, independent timelines and strict running reset
+  simulated 60s B16 quality0 drift-100ppm phase0.07 timestamps1 Q16; FIFO 8/16/39, ppm 98.15/-74.38/-97.62
+  simulated 60s B16 quality0 drift-100ppm phase0.47 timestamps1 Q16; FIFO 16/29/32, ppm 105.88/-61.67/-105.86
+  simulated 60s B16 quality0 drift-100ppm phase0.93 timestamps1 Q16; FIFO 23/28/25, ppm 77.27/-57.18/-77.10
+  simulated 60s B16 quality0 drift+100ppm phase0.07 timestamps1 Q16; FIFO 25/20/23, ppm -77.09/57.19/77.26
+  simulated 60s B16 quality0 drift+100ppm phase0.47 timestamps1 Q16; FIFO 31/17/17, ppm -101.76/69.80/101.78
+  simulated 60s B16 quality0 drift+100ppm phase0.93 timestamps1 Q16; FIFO 39/32/8, ppm -97.65/74.40/98.17
+PASS 16-frame offline regressions; no hardware stability or latency claim

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>CFBundleIdentifier</key><string>jp.seijiro.my-redirector</string>
+<key>CFBundleName</key><string>My Redirector</string>
+<key>CFBundleDisplayName</key><string>My Redirector</string>
+<key>CFBundleExecutable</key><string>MyRedirector</string>
+<key>CFBundleIconFile</key><string>AppIcon.icns</string>
+<key>CFBundlePackageType</key><string>APPL</string>
+<key>CFBundleShortVersionString</key><string>0.1.0</string>
+<key>CFBundleVersion</key><string>1</string>
+<key>LSMinimumSystemVersion</key><string>14.2</string>
+<key>NSHighResolutionCapable</key><true/>
+<key>NSMicrophoneUsageDescription</key><string>RMEの入力とDiscrete4の処理後音声を取り込み、選択した出力へ送ります。</string>
+<key>NSAudioCaptureUsageDescription</key><string>PCの再生チャンネルを取り込み、RME入力とミックスしてDiscrete4へ送ります。</string>
+<key>NSPrincipalClass</key><string>NSApplication</string>
+</dict></plist>

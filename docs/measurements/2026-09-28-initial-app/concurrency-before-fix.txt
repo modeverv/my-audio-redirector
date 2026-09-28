@@ -1,0 +1,6 @@
+concurrency first fault iteration=11962 fault=3 primed=7 produced=12002 consumed=12000
+  source0 input=765760 fifo=0 min=0 max=256 underruns=1 overflows=0 startupDiscarded=41 ppm=-16.063
+  source1 input=765760 fifo=0 min=0 max=256 underruns=0 overflows=0 startupDiscarded=105 ppm=-1.585
+  source2 input=765760 fifo=64 min=0 max=256 underruns=0 overflows=0 startupDiscarded=105 ppm=-1.731
+FAIL: concurrent SPSC/control/snapshot failed
+PASS concurrent SPSC, controls and telemetry (1/20)
