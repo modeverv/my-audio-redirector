@@ -15,6 +15,14 @@ enum RedirectorEntry {
     @MainActor
     private static func runCommandLine(_ arguments: [String]) -> Int32 {
         let queue = DispatchQueue(label: "local.my-redirector.cli-control")
+        if arguments.first == "--measure-latency" {
+            guard arguments.count == 6, arguments[2] == "--output", arguments[4] == "--seconds",
+                  let seconds = Double(arguments[5]), seconds.isFinite, (1...8).contains(seconds) else {
+                writeError("Use --measure-latency CONFIG --output CAPTURE.json --seconds 1...8. Runs the saved audible route; use a separate quiet signal player.")
+                return 2
+            }
+            return LatencyCheck.run(path: arguments[1], output: arguments[3], seconds: seconds)
+        }
         if arguments.first == "--check-muted-route", arguments.count >= 2 {
             var seconds = 10.0
             var stressGates = false

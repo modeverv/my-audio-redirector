@@ -1,0 +1,3693 @@
+{
+  "afterStop": {
+    "aggregateActive": false,
+    "aggregateUID": "my-redirector.capture.1898610A-12FD-49E6-875A-2DCE014546AD",
+    "captureContainer": "private-tap-only",
+    "clipped": 0,
+    "d4BufferFrames": 64,
+    "error": null,
+    "fault": 0,
+    "ioTiming": [
+      {
+        "armedCallbacks": 4734,
+        "inputFramesMax": 64,
+        "inputFramesMin": 64,
+        "io": "RME",
+        "maxCallbackIntervalUS": 1381.2499999999998,
+        "maxProcessingUS": 18.916666666666664,
+        "outputFramesMax": 64,
+        "outputFramesMin": 64
+      },
+      {
+        "armedCallbacks": 4734,
+        "inputFramesMax": 64,
+        "inputFramesMin": 64,
+        "io": "Discrete4",
+        "maxCallbackIntervalUS": 1360.4166666666665,
+        "maxProcessingUS": 21.95833333333333,
+        "outputFramesMax": 64,
+        "outputFramesMin": 64
+      },
+      {
+        "armedCallbacks": 4734,
+        "inputFramesMax": 64,
+        "inputFramesMin": 64,
+        "io": "PC Tap",
+        "maxCallbackIntervalUS": 1369.583333333333,
+        "maxProcessingUS": 12.333333333333332,
+        "outputFramesMax": null,
+        "outputFramesMin": null
+      }
+    ],
+    "nonFinite": 0,
+    "outputPeaks": [
+      5.075108666652284e-10,
+      0
+    ],
+    "pcBufferFrames": 64,
+    "pcChannels": 20,
+    "pcDeviceUID": "RMEUSBDevice-130-24100500",
+    "pcStreamIndex": 0,
+    "primedMask": 7,
+    "probeCallbacks": 0,
+    "probeFormat": {
+      "bytesPerFrame": 80,
+      "channels": 20,
+      "format": "Float32",
+      "formatFlags": 9,
+      "formatID": 1819304813,
+      "nonInterleaved": false,
+      "sampleRate": 48000
+    },
+    "probeFrames": 0,
+    "probePeaks": [],
+    "requestedBufferFrames": 64,
+    "rmeBufferFrames": 64,
+    "selfProcessExcluded": true,
+    "sources": [
+      {
+        "callbacks": 4968,
+        "fifoFrames": 128,
+        "fifoMax": 192,
+        "fifoMin": 64,
+        "frames": 302976,
+        "gateGains": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        "name": "RME",
+        "overflows": 0,
+        "peaks": [
+          0.0003732442855834961,
+          0.0036181211471557617,
+          0.00011396408081054688,
+          6.401538848876953e-05,
+          1.811981201171875e-05,
+          3.2186508178710938e-06,
+          1.3589859008789062e-05,
+          1.3470649719238281e-05,
+          0,
+          0,
+          0.00799560546875,
+          0.007781982421875,
+          0.002854585647583008,
+          0.0010707378387451172,
+          0.016109943389892578,
+          0.004702568054199219,
+          2.6464462280273438e-05,
+          1.895427703857422e-05,
+          3.170967102050781e-05,
+          5.829334259033203e-05
+        ],
+        "ppm": -0.29123150897893213,
+        "startupDiscardedFrames": 41,
+        "underruns": 0
+      },
+      {
+        "callbacks": 4744,
+        "fifoFrames": 128,
+        "fifoMax": 192,
+        "fifoMin": 64,
+        "frames": 302976,
+        "gateGains": [
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "name": "PC",
+        "overflows": 0,
+        "peaks": [
+          0.00701904296875,
+          0.00714111328125,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "ppm": -0.31010134955790436,
+        "startupDiscardedFrames": 41,
+        "underruns": 0
+      },
+      {
+        "callbacks": 4755,
+        "fifoFrames": 65,
+        "fifoMax": 192,
+        "fifoMin": 65,
+        "frames": 302976,
+        "gateGains": [
+          1,
+          1
+        ],
+        "name": "Return",
+        "overflows": 0,
+        "peaks": [
+          0.0063152313232421875,
+          0.00642549991607666
+        ],
+        "ppm": -10.696337717149603,
+        "startupDiscardedFrames": 41,
+        "underruns": 0
+      }
+    ],
+    "state": "off",
+    "tapActive": false,
+    "tapUID": "6AF706E5-597D-47AB-9ACC-50931EE3A874",
+    "teardownDiagnostic": null,
+    "unsafeTeardown": false
+  },
+  "armed": true,
+  "beforeStop": {
+    "aggregateActive": true,
+    "aggregateUID": "my-redirector.capture.1898610A-12FD-49E6-875A-2DCE014546AD",
+    "captureContainer": "private-tap-only",
+    "clipped": 0,
+    "d4BufferFrames": 64,
+    "error": null,
+    "fault": 0,
+    "ioTiming": [
+      {
+        "armedCallbacks": 4729,
+        "inputFramesMax": 64,
+        "inputFramesMin": 64,
+        "io": "RME",
+        "maxCallbackIntervalUS": 1381.2499999999998,
+        "maxProcessingUS": 18.916666666666664,
+        "outputFramesMax": 64,
+        "outputFramesMin": 64
+      },
+      {
+        "armedCallbacks": 4729,
+        "inputFramesMax": 64,
+        "inputFramesMin": 64,
+        "io": "Discrete4",
+        "maxCallbackIntervalUS": 1360.4166666666665,
+        "maxProcessingUS": 21.95833333333333,
+        "outputFramesMax": 64,
+        "outputFramesMin": 64
+      },
+      {
+        "armedCallbacks": 4729,
+        "inputFramesMax": 64,
+        "inputFramesMin": 64,
+        "io": "PC Tap",
+        "maxCallbackIntervalUS": 1369.583333333333,
+        "maxProcessingUS": 12.333333333333332,
+        "outputFramesMax": null,
+        "outputFramesMin": null
+      }
+    ],
+    "nonFinite": 0,
+    "outputPeaks": [
+      0.0093693183735013,
+      0.010632713325321674
+    ],
+    "pcBufferFrames": 64,
+    "pcChannels": 20,
+    "pcDeviceUID": "RMEUSBDevice-130-24100500",
+    "pcStreamIndex": 0,
+    "primedMask": 7,
+    "probeCallbacks": 0,
+    "probeFormat": {
+      "bytesPerFrame": 80,
+      "channels": 20,
+      "format": "Float32",
+      "formatFlags": 9,
+      "formatID": 1819304813,
+      "nonInterleaved": false,
+      "sampleRate": 48000
+    },
+    "probeFrames": 0,
+    "probePeaks": [],
+    "requestedBufferFrames": 64,
+    "rmeBufferFrames": 64,
+    "selfProcessExcluded": true,
+    "sources": [
+      {
+        "callbacks": 4963,
+        "fifoFrames": 65,
+        "fifoMax": 192,
+        "fifoMin": 64,
+        "frames": 302528,
+        "gateGains": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        "name": "RME",
+        "overflows": 0,
+        "peaks": [
+          0.0007675886154174805,
+          0.0017902851104736328,
+          7.677078247070312e-05,
+          5.900859832763672e-05,
+          1.4424324035644531e-05,
+          4.649162292480469e-06,
+          1.4543533325195312e-05,
+          1.5854835510253906e-05,
+          0,
+          0,
+          0.00762939453125,
+          0.00543212890625,
+          0.004686236381530762,
+          0.0008786916732788086,
+          0.013465523719787598,
+          0.005903482437133789,
+          2.5033950805664062e-05,
+          1.990795135498047e-05,
+          3.516674041748047e-05,
+          4.3392181396484375e-05
+        ],
+        "ppm": 0.5087684908220278,
+        "startupDiscardedFrames": 41,
+        "underruns": 0
+      },
+      {
+        "callbacks": 4730,
+        "fifoFrames": 65,
+        "fifoMax": 192,
+        "fifoMin": 64,
+        "frames": 302528,
+        "gateGains": [
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "name": "PC",
+        "overflows": 0,
+        "peaks": [
+          0.00677490234375,
+          0.005645751953125,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "ppm": 0.48989865024305557,
+        "startupDiscardedFrames": 41,
+        "underruns": 0
+      },
+      {
+        "callbacks": 4744,
+        "fifoFrames": 129,
+        "fifoMax": 192,
+        "fifoMin": 65,
+        "frames": 302592,
+        "gateGains": [
+          1,
+          1
+        ],
+        "name": "Return",
+        "overflows": 0,
+        "peaks": [
+          0.007412552833557129,
+          0.009795308113098145
+        ],
+        "ppm": -11.629671050768827,
+        "startupDiscardedFrames": 41,
+        "underruns": 0
+      }
+    ],
+    "state": "running",
+    "tapActive": true,
+    "tapUID": "6AF706E5-597D-47AB-9ACC-50931EE3A874",
+    "teardownDiagnostic": null,
+    "unsafeTeardown": false
+  },
+  "boundary": "HAL buffer frame host timestamps; not physical ADC/DAC measurement",
+  "cleanupConfirmed": true,
+  "configurationFileModified": false,
+  "diagnostic": "signal-latency",
+  "effectiveConfiguration": {
+    "bufferFrames": 64,
+    "d4ReturnLeft": 7,
+    "d4ReturnRight": 8,
+    "d4UID": "com.antelope.23e5a27021121000.Discrete4 USB",
+    "forwardGainDB": 0,
+    "pcChannels": [
+      {
+        "channel": 1,
+        "gainDB": 0,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -60
+        },
+        "muted": false,
+        "pan": -1
+      },
+      {
+        "channel": 2,
+        "gainDB": 0,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -60
+        },
+        "muted": false,
+        "pan": 1
+      },
+      {
+        "channel": 3,
+        "gainDB": 0,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -60
+        },
+        "muted": true,
+        "pan": -1
+      },
+      {
+        "channel": 4,
+        "gainDB": 0,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -60
+        },
+        "muted": true,
+        "pan": 1
+      },
+      {
+        "channel": 5,
+        "gainDB": 0,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -60
+        },
+        "muted": true,
+        "pan": -1
+      },
+      {
+        "channel": 6,
+        "gainDB": 0,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -60
+        },
+        "muted": true,
+        "pan": 1
+      },
+      {
+        "channel": 7,
+        "gainDB": 0,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -60
+        },
+        "muted": true,
+        "pan": -1
+      },
+      {
+        "channel": 8,
+        "gainDB": 0,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -60
+        },
+        "muted": true,
+        "pan": 1
+      },
+      {
+        "channel": 9,
+        "gainDB": 0,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -60
+        },
+        "muted": true,
+        "pan": -1
+      },
+      {
+        "channel": 10,
+        "gainDB": 0,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -60
+        },
+        "muted": true,
+        "pan": 1
+      },
+      {
+        "channel": 11,
+        "gainDB": 0,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -60
+        },
+        "muted": true,
+        "pan": -1
+      },
+      {
+        "channel": 12,
+        "gainDB": 0,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -60
+        },
+        "muted": true,
+        "pan": 1
+      },
+      {
+        "channel": 13,
+        "gainDB": 0,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -60
+        },
+        "muted": true,
+        "pan": -1
+      },
+      {
+        "channel": 14,
+        "gainDB": 0,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -60
+        },
+        "muted": true,
+        "pan": 1
+      },
+      {
+        "channel": 15,
+        "gainDB": 0,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -60
+        },
+        "muted": true,
+        "pan": -1
+      },
+      {
+        "channel": 16,
+        "gainDB": 0,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -60
+        },
+        "muted": true,
+        "pan": 1
+      },
+      {
+        "channel": 17,
+        "gainDB": 0,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -60
+        },
+        "muted": true,
+        "pan": -1
+      },
+      {
+        "channel": 18,
+        "gainDB": 0,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -60
+        },
+        "muted": true,
+        "pan": 1
+      },
+      {
+        "channel": 19,
+        "gainDB": 0,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -60
+        },
+        "muted": true,
+        "pan": -1
+      },
+      {
+        "channel": 20,
+        "gainDB": 0,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -60
+        },
+        "muted": true,
+        "pan": 1
+      }
+    ],
+    "pcFifoFrames": 64,
+    "pcStereoLinks": [
+      1
+    ],
+    "pcStreamIndex": 0,
+    "pcUID": "RMEUSBDevice-130-24100500",
+    "returnFifoFrames": 64,
+    "returnGainDB": 0,
+    "returnGateLinked": true,
+    "returnGates": [
+      {
+        "attackMS": 0.2,
+        "enabled": true,
+        "holdMS": 50,
+        "hysteresisDB": 6,
+        "releaseMS": 30,
+        "thresholdDB": -60
+      },
+      {
+        "attackMS": 0.2,
+        "enabled": true,
+        "holdMS": 50,
+        "hysteresisDB": 6,
+        "releaseMS": 30,
+        "thresholdDB": -60
+      }
+    ],
+    "returnMuted": false,
+    "rmeChannels": [
+      {
+        "channel": 1,
+        "gainDB": 0.1,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 2.3,
+          "releaseMS": 30,
+          "thresholdDB": -33.6
+        },
+        "muted": true,
+        "pan": 1
+      },
+      {
+        "channel": 2,
+        "gainDB": 0.8,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -30.4
+        },
+        "muted": true,
+        "pan": 1
+      },
+      {
+        "channel": 3,
+        "gainDB": 0,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -60
+        },
+        "muted": true,
+        "pan": -1
+      },
+      {
+        "channel": 4,
+        "gainDB": 0,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -60
+        },
+        "muted": true,
+        "pan": 1
+      },
+      {
+        "channel": 5,
+        "gainDB": 0.7,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -60
+        },
+        "muted": true,
+        "pan": -1
+      },
+      {
+        "channel": 6,
+        "gainDB": 0,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -60
+        },
+        "muted": true,
+        "pan": 1
+      },
+      {
+        "channel": 7,
+        "gainDB": 0,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -60
+        },
+        "muted": true,
+        "pan": -1
+      },
+      {
+        "channel": 8,
+        "gainDB": 0,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -60
+        },
+        "muted": true,
+        "pan": 1
+      },
+      {
+        "channel": 9,
+        "gainDB": 0,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -60
+        },
+        "muted": true,
+        "pan": -1
+      },
+      {
+        "channel": 10,
+        "gainDB": 0,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -60
+        },
+        "muted": true,
+        "pan": 1
+      },
+      {
+        "channel": 11,
+        "gainDB": 0,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -60
+        },
+        "muted": true,
+        "pan": -1
+      },
+      {
+        "channel": 12,
+        "gainDB": 0,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -60
+        },
+        "muted": true,
+        "pan": 1
+      },
+      {
+        "channel": 13,
+        "gainDB": 0,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -31.8
+        },
+        "muted": true,
+        "pan": -1
+      },
+      {
+        "channel": 14,
+        "gainDB": 0,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -60
+        },
+        "muted": true,
+        "pan": 1
+      },
+      {
+        "channel": 15,
+        "gainDB": 0,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -60
+        },
+        "muted": true,
+        "pan": -1
+      },
+      {
+        "channel": 16,
+        "gainDB": 0,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -60
+        },
+        "muted": true,
+        "pan": 1
+      },
+      {
+        "channel": 17,
+        "gainDB": 0,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -60
+        },
+        "muted": true,
+        "pan": -1
+      },
+      {
+        "channel": 18,
+        "gainDB": 0,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -60
+        },
+        "muted": true,
+        "pan": 1
+      },
+      {
+        "channel": 19,
+        "gainDB": 0,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -60
+        },
+        "muted": true,
+        "pan": -1
+      },
+      {
+        "channel": 20,
+        "gainDB": 0,
+        "gate": {
+          "attackMS": 0.2,
+          "enabled": true,
+          "holdMS": 50,
+          "hysteresisDB": 6,
+          "releaseMS": 30,
+          "thresholdDB": -60
+        },
+        "muted": true,
+        "pan": 1
+      }
+    ],
+    "rmeFifoFrames": 64,
+    "rmeReturnLeft": 9,
+    "rmeReturnRight": 10,
+    "rmeStereoLinks": [],
+    "rmeUID": "RMEUSBDevice-130-24100500",
+    "schemaVersion": 1,
+    "srcQuality": "fastest",
+    "tapMuteOriginal": false
+  },
+  "error": null,
+  "requestedSeconds": 4,
+  "sampleRate": 48000,
+  "startedAt": "2026-09-28T11:51:11Z",
+  "success": true,
+  "streams": [
+    {
+      "capacityExceeded": false,
+      "channels": 2,
+      "frames": 191936,
+      "name": "pc_tap"
+    },
+    {
+      "capacityExceeded": false,
+      "channels": 2,
+      "frames": 192000,
+      "name": "d4_output"
+    },
+    {
+      "capacityExceeded": false,
+      "channels": 2,
+      "frames": 192000,
+      "name": "d4_return"
+    },
+    {
+      "capacityExceeded": false,
+      "channels": 2,
+      "frames": 191936,
+      "name": "rme_output"
+    }
+  ],
+  "rawCaptureLocalPath": "/Users/seijiro/Sync/sync_work/by-llms/my-redirector/.build/latency-measurement/capture-02.json",
+  "rawCaptureSHA256": "ddfd6653fcfc6e0bcf517dc435da24e705b93735f62b584118846bccf751e756",
+  "analysis": {
+    "schema": 1,
+    "sample_rate": 48000.0,
+    "boundary": "Difference between driver-reported host timestamps of corresponding audio frames in the named callback buffers. Not an ADC/DAC, acoustic, or original application-to-PC-Tap latency measurement.",
+    "arrival_boundary": "Output callback entry minus input callback entry for matched frames; includes callback block phase and is not output completion or presentation latency.",
+    "method": "independent timestamp-rate fit, common host-time grid, per-channel normalized cross-correlation",
+    "notes": [
+      "fit_snr_db is delayed linear-fit signal/residual ratio, not a hardware noise-floor measurement.",
+      "Fractional peak interpolation improves the estimate; it does not establish sub-sample hardware accuracy.",
+      "No device/stream latency or FIFO/SRC estimate is added to measured timestamp differences.",
+      "Only accepted windows contribute to summaries; rejected windows remain in the report."
+    ],
+    "analysis_settings": {
+      "window_seconds": 0.3,
+      "lag_search_ms": [
+        0,
+        100
+      ],
+      "min_correlation": 0.8,
+      "min_peak_margin": 0.15,
+      "min_fit_snr_db": 3,
+      "min_accepted_windows_per_channel": 3
+    },
+    "capture_health": {
+      "verified": true,
+      "issues": [],
+      "note": null
+    },
+    "streams": [
+      {
+        "name": "pc_tap",
+        "frames": 191936,
+        "blocks": 2999,
+        "estimated_sample_rate": 48000.07106604437,
+        "rate_offset_ppm": 1.4805425911923464,
+        "clock_fit_max_residual_us": 0.7729858373384246,
+        "host_duration_seconds": 3.9986396230560786
+      },
+      {
+        "name": "d4_output",
+        "frames": 192000,
+        "blocks": 3000,
+        "estimated_sample_rate": 48000.05542154786,
+        "rate_offset_ppm": 1.1546155804786906,
+        "clock_fit_max_residual_us": 18.054334118389193,
+        "host_duration_seconds": 3.9999689151482016
+      },
+      {
+        "name": "d4_return",
+        "frames": 192000,
+        "blocks": 3000,
+        "estimated_sample_rate": 48000.05485711056,
+        "rate_offset_ppm": 1.1428564701265742,
+        "clock_fit_max_residual_us": 18.015253946623844,
+        "host_duration_seconds": 3.999968956832163
+      },
+      {
+        "name": "rme_output",
+        "frames": 191936,
+        "blocks": 2999,
+        "estimated_sample_rate": 48000.07127476471,
+        "rate_offset_ppm": 1.4848909315468006,
+        "clock_fit_max_residual_us": 0.7761187805765957,
+        "host_duration_seconds": 3.998639664714574
+      }
+    ],
+    "stream_errors": {},
+    "pairs": [
+      {
+        "input": "pc_tap",
+        "output": "d4_output",
+        "status": "measured",
+        "channels": [
+          {
+            "channel": 1,
+            "status": "measured",
+            "accepted_windows": 12,
+            "total_windows": 12,
+            "latency_ms": {
+              "median": 7.278487728771619,
+              "min": 7.26162503385626,
+              "max": 7.290213809802395
+            },
+            "latency_frames_at_nominal_rate": {
+              "median": 349.3674109810378,
+              "min": 348.5580016251005,
+              "max": 349.930262870515
+            },
+            "correlation": {
+              "median": 0.966013548386458,
+              "min": 0.9470200052119343,
+              "max": 0.9913067495027142
+            },
+            "peak_margin": {
+              "median": 0.9081561756180189,
+              "min": 0.8845431351508112,
+              "max": 0.9379511730596586
+            },
+            "fit_snr_db": {
+              "median": 15.55361908065911,
+              "min": 13.589439783767961,
+              "max": 18.269983951842224
+            },
+            "callback_entry_difference_ms": {
+              "median_window_mean": 2.8495107509391144,
+              "min": 2.354041665967088,
+              "max": 3.7713333331339527
+            }
+          },
+          {
+            "channel": 2,
+            "status": "measured",
+            "accepted_windows": 12,
+            "total_windows": 12,
+            "latency_ms": {
+              "median": 7.278127150146746,
+              "min": 7.261413890502105,
+              "max": 7.290311314501159
+            },
+            "latency_frames_at_nominal_rate": {
+              "median": 349.35010320704384,
+              "min": 348.54786674410104,
+              "max": 349.93494309605563
+            },
+            "correlation": {
+              "median": 0.9659387950865168,
+              "min": 0.9465142537467756,
+              "max": 0.9906606787527531
+            },
+            "peak_margin": {
+              "median": 0.9104936749362949,
+              "min": 0.8849008682821551,
+              "max": 0.941161602583795
+            },
+            "fit_snr_db": {
+              "median": 15.49714459298331,
+              "min": 13.683903026729368,
+              "max": 18.23091819035298
+            },
+            "callback_entry_difference_ms": {
+              "median_window_mean": 2.8496465684242542,
+              "min": 2.354041665967088,
+              "max": 3.7713333331339527
+            }
+          }
+        ],
+        "windows": [
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9524705558394699,
+            "second_peak_correlation": 0.056479850123637224,
+            "peak_margin": 0.8959907057158327,
+            "fit_snr_db": 13.589439783767961,
+            "gain": 0.9482997271008496,
+            "polarity": 1,
+            "input_rms_dbfs": -49.933198523156065,
+            "search_boundary_peak": false,
+            "window": 0,
+            "channel": 1,
+            "input_host_start_seconds": 32212.65453075,
+            "latency_ms": 7.2794675412209635,
+            "latency_frames_at_nominal_rate": 349.41444197860625,
+            "matched_output_host_start_seconds": 32212.661810217538,
+            "callback_entry_difference_ms": {
+              "mean": 2.8474294010341814,
+              "min": 2.3740416654618457,
+              "max": 3.7534583316300996
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9539022270009163,
+            "second_peak_correlation": 0.056332557272939746,
+            "peak_margin": 0.8975696697279766,
+            "fit_snr_db": 13.683903026729368,
+            "gain": 0.949399926341158,
+            "polarity": 1,
+            "input_rms_dbfs": -50.261315901333234,
+            "search_boundary_peak": false,
+            "window": 0,
+            "channel": 2,
+            "input_host_start_seconds": 32212.65453075,
+            "latency_ms": 7.279358095122003,
+            "latency_frames_at_nominal_rate": 349.40918856585614,
+            "matched_output_host_start_seconds": 32212.661810108093,
+            "callback_entry_difference_ms": {
+              "mean": 2.8474294010341814,
+              "min": 2.3740416654618457,
+              "max": 3.7534583316300996
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9792429633076418,
+            "second_peak_correlation": 0.06688194267268106,
+            "peak_margin": 0.9123610206349607,
+            "fit_snr_db": 16.692437655773933,
+            "gain": 0.9766298130328183,
+            "polarity": 1,
+            "input_rms_dbfs": -49.772473475063215,
+            "search_boundary_peak": false,
+            "window": 1,
+            "channel": 1,
+            "input_host_start_seconds": 32212.954530749998,
+            "latency_ms": 7.286499094535606,
+            "latency_frames_at_nominal_rate": 349.7519565377091,
+            "matched_output_host_start_seconds": 32212.961817249092,
+            "callback_entry_difference_ms": {
+              "mean": 2.8581447133963898,
+              "min": 2.354041665967088,
+              "max": 3.765624998777639
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9804134129350182,
+            "second_peak_correlation": 0.06487523136090918,
+            "peak_margin": 0.9155381815741089,
+            "fit_snr_db": 16.837704709777263,
+            "gain": 0.9773110398351249,
+            "polarity": 1,
+            "input_rms_dbfs": -50.105372336218196,
+            "search_boundary_peak": false,
+            "window": 1,
+            "channel": 2,
+            "input_host_start_seconds": 32212.954530749998,
+            "latency_ms": 7.286661873268522,
+            "latency_frames_at_nominal_rate": 349.75976991688907,
+            "matched_output_host_start_seconds": 32212.96181741187,
+            "callback_entry_difference_ms": {
+              "mean": 2.8581447133963898,
+              "min": 2.354041665967088,
+              "max": 3.765624998777639
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9892354134789572,
+            "second_peak_correlation": 0.06245386068929945,
+            "peak_margin": 0.9267815527896577,
+            "fit_snr_db": 16.95770966611122,
+            "gain": 0.9861143336925045,
+            "polarity": 1,
+            "input_rms_dbfs": -49.74290000491508,
+            "search_boundary_peak": false,
+            "window": 2,
+            "channel": 1,
+            "input_host_start_seconds": 32213.254530749997,
+            "latency_ms": 7.290213809802395,
+            "latency_frames_at_nominal_rate": 349.930262870515,
+            "matched_output_host_start_seconds": 32213.261820963806,
+            "callback_entry_difference_ms": {
+              "mean": 2.8638353442968563,
+              "min": 2.3728749984002206,
+              "max": 3.7615000001096632
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9887992455886361,
+            "second_peak_correlation": 0.05486624148925489,
+            "peak_margin": 0.9339330040993812,
+            "fit_snr_db": 16.739585257099474,
+            "gain": 0.9860999949070632,
+            "polarity": 1,
+            "input_rms_dbfs": -50.29461935698105,
+            "search_boundary_peak": false,
+            "window": 2,
+            "channel": 2,
+            "input_host_start_seconds": 32213.254530749997,
+            "latency_ms": 7.290311314501159,
+            "latency_frames_at_nominal_rate": 349.93494309605563,
+            "matched_output_host_start_seconds": 32213.26182106131,
+            "callback_entry_difference_ms": {
+              "mean": 2.8638353442968563,
+              "min": 2.3728749984002206,
+              "max": 3.7615000001096632
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9470200052119343,
+            "second_peak_correlation": 0.06188380577936858,
+            "peak_margin": 0.8851361994325657,
+            "fit_snr_db": 14.502437194895432,
+            "gain": 0.9476389755280523,
+            "polarity": 1,
+            "input_rms_dbfs": -49.84908779335135,
+            "search_boundary_peak": false,
+            "window": 3,
+            "channel": 1,
+            "input_host_start_seconds": 32213.55453075,
+            "latency_ms": 7.281038074507683,
+            "latency_frames_at_nominal_rate": 349.4898275763688,
+            "matched_output_host_start_seconds": 32213.561811788073,
+            "callback_entry_difference_ms": {
+              "mean": 2.845664048157283,
+              "min": 2.380166664806893,
+              "max": 3.748208335309755
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9480334986210213,
+            "second_peak_correlation": 0.052016166416580925,
+            "peak_margin": 0.8960173322044404,
+            "fit_snr_db": 14.628748765279237,
+            "gain": 0.9491965070796384,
+            "polarity": 1,
+            "input_rms_dbfs": -50.162881812985546,
+            "search_boundary_peak": false,
+            "window": 3,
+            "channel": 2,
+            "input_host_start_seconds": 32213.55453075,
+            "latency_ms": 7.281330546039144,
+            "latency_frames_at_nominal_rate": 349.50386620987894,
+            "matched_output_host_start_seconds": 32213.561812080545,
+            "callback_entry_difference_ms": {
+              "mean": 2.847701036004461,
+              "min": 2.380166664806893,
+              "max": 3.748208335309755
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9635709394942614,
+            "second_peak_correlation": 0.055112260239385036,
+            "peak_margin": 0.9084586792548763,
+            "fit_snr_db": 14.686239577066317,
+            "gain": 0.9585946733285097,
+            "polarity": 1,
+            "input_rms_dbfs": -49.91807057640072,
+            "search_boundary_peak": false,
+            "window": 4,
+            "channel": 1,
+            "input_host_start_seconds": 32213.85453075,
+            "latency_ms": 7.2783900669819745,
+            "latency_frames_at_nominal_rate": 349.3627232151348,
+            "matched_output_host_start_seconds": 32213.861809140068,
+            "callback_entry_difference_ms": {
+              "mean": 2.8576103819326213,
+              "min": 2.380375000939239,
+              "max": 3.75358333621989
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9654490746320435,
+            "second_peak_correlation": 0.051431382502529446,
+            "peak_margin": 0.9140176921295141,
+            "fit_snr_db": 14.783516351661696,
+            "gain": 0.9596399178217211,
+            "polarity": 1,
+            "input_rms_dbfs": -50.164378292768006,
+            "search_boundary_peak": false,
+            "window": 4,
+            "channel": 2,
+            "input_host_start_seconds": 32213.85453075,
+            "latency_ms": 7.278079216192676,
+            "latency_frames_at_nominal_rate": 349.34780237724846,
+            "matched_output_host_start_seconds": 32213.861808829217,
+            "callback_entry_difference_ms": {
+              "mean": 2.8576103819326213,
+              "min": 2.380375000939239,
+              "max": 3.75358333621989
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9682638236393382,
+            "second_peak_correlation": 0.06041015165817679,
+            "peak_margin": 0.9078536719811614,
+            "fit_snr_db": 14.801553225510196,
+            "gain": 0.9507698303732407,
+            "polarity": 1,
+            "input_rms_dbfs": -49.86227554118021,
+            "search_boundary_peak": false,
+            "window": 5,
+            "channel": 1,
+            "input_host_start_seconds": 32214.15453075,
+            "latency_ms": 7.277463320070719,
+            "latency_frames_at_nominal_rate": 349.3182393633945,
+            "matched_output_host_start_seconds": 32214.161808213317,
+            "callback_entry_difference_ms": {
+              "mean": 2.8421185444133497,
+              "min": 2.376958331296919,
+              "max": 3.7426249982672743
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9664285155409902,
+            "second_peak_correlation": 0.0689005495972182,
+            "peak_margin": 0.897527965943772,
+            "fit_snr_db": 14.758993665948694,
+            "gain": 0.948999984540554,
+            "polarity": 1,
+            "input_rms_dbfs": -50.13439318574672,
+            "search_boundary_peak": false,
+            "window": 5,
+            "channel": 2,
+            "input_host_start_seconds": 32214.15453075,
+            "latency_ms": 7.277685950537093,
+            "latency_frames_at_nominal_rate": 349.32892562578047,
+            "matched_output_host_start_seconds": 32214.161808435947,
+            "callback_entry_difference_ms": {
+              "mean": 2.8421185444133497,
+              "min": 2.376958331296919,
+              "max": 3.7426249982672743
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9493525825720822,
+            "second_peak_correlation": 0.06480944742127104,
+            "peak_margin": 0.8845431351508112,
+            "fit_snr_db": 14.864508962819343,
+            "gain": 0.9554655646785791,
+            "polarity": 1,
+            "input_rms_dbfs": -49.897476052981,
+            "search_boundary_peak": false,
+            "window": 6,
+            "channel": 1,
+            "input_host_start_seconds": 32214.454530749998,
+            "latency_ms": 7.28090416462127,
+            "latency_frames_at_nominal_rate": 349.483399901821,
+            "matched_output_host_start_seconds": 32214.46181165416,
+            "callback_entry_difference_ms": {
+              "mean": 2.8560334808035908,
+              "min": 2.390041667240439,
+              "max": 3.764833334571449
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9465142537467756,
+            "second_peak_correlation": 0.06161338546462043,
+            "peak_margin": 0.8849008682821551,
+            "fit_snr_db": 14.763662402910505,
+            "gain": 0.9539792065687163,
+            "polarity": 1,
+            "input_rms_dbfs": -50.081617737851296,
+            "search_boundary_peak": false,
+            "window": 6,
+            "channel": 2,
+            "input_host_start_seconds": 32214.454530749998,
+            "latency_ms": 7.2811862325008505,
+            "latency_frames_at_nominal_rate": 349.4969391600408,
+            "matched_output_host_start_seconds": 32214.46181193623,
+            "callback_entry_difference_ms": {
+              "mean": 2.8560334808035908,
+              "min": 2.390041667240439,
+              "max": 3.764833334571449
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9913067495027142,
+            "second_peak_correlation": 0.053355576443055615,
+            "peak_margin": 0.9379511730596586,
+            "fit_snr_db": 17.72811387368505,
+            "gain": 0.9878459385421005,
+            "polarity": 1,
+            "input_rms_dbfs": -49.78260500188915,
+            "search_boundary_peak": false,
+            "window": 7,
+            "channel": 1,
+            "input_host_start_seconds": 32214.754530749997,
+            "latency_ms": 7.271769071912065,
+            "latency_frames_at_nominal_rate": 349.0449154517791,
+            "matched_output_host_start_seconds": 32214.761802519068,
+            "callback_entry_difference_ms": {
+              "mean": 2.8455176619685414,
+              "min": 2.372625000134576,
+              "max": 3.7492500014195684
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9906606787527531,
+            "second_peak_correlation": 0.0558545914604733,
+            "peak_margin": 0.9348060872922798,
+            "fit_snr_db": 17.434224956731615,
+            "gain": 0.9865865225413194,
+            "polarity": 1,
+            "input_rms_dbfs": -50.198531092358806,
+            "search_boundary_peak": false,
+            "window": 7,
+            "channel": 2,
+            "input_host_start_seconds": 32214.754530749997,
+            "latency_ms": 7.271850637736578,
+            "latency_frames_at_nominal_rate": 349.04883061135575,
+            "matched_output_host_start_seconds": 32214.761802600635,
+            "callback_entry_difference_ms": {
+              "mean": 2.8455176619685414,
+              "min": 2.372625000134576,
+              "max": 3.7492500014195684
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9828336368544587,
+            "second_peak_correlation": 0.06165890063228165,
+            "peak_margin": 0.921174736222177,
+            "fit_snr_db": 16.028312299201627,
+            "gain": 0.9639562341267474,
+            "polarity": 1,
+            "input_rms_dbfs": -49.78382326002897,
+            "search_boundary_peak": false,
+            "window": 8,
+            "channel": 1,
+            "input_host_start_seconds": 32215.05453075,
+            "latency_ms": 7.274493918762769,
+            "latency_frames_at_nominal_rate": 349.1757081006129,
+            "matched_output_host_start_seconds": 32215.061805243917,
+            "callback_entry_difference_ms": {
+              "mean": 2.8522721731213903,
+              "min": 2.3847499978728592,
+              "max": 3.7713333331339527
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9825862004456024,
+            "second_peak_correlation": 0.05274280707283608,
+            "peak_margin": 0.9298433933727663,
+            "fit_snr_db": 16.087955996008215,
+            "gain": 0.9631571433500512,
+            "polarity": 1,
+            "input_rms_dbfs": -50.23712228903044,
+            "search_boundary_peak": false,
+            "window": 8,
+            "channel": 2,
+            "input_host_start_seconds": 32215.05453075,
+            "latency_ms": 7.274618806999285,
+            "latency_frames_at_nominal_rate": 349.1817027359657,
+            "matched_output_host_start_seconds": 32215.061805368805,
+            "callback_entry_difference_ms": {
+              "mean": 2.8522721731213903,
+              "min": 2.3847499978728592,
+              "max": 3.7713333331339527
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9637632731335779,
+            "second_peak_correlation": 0.06456083889510048,
+            "peak_margin": 0.8992024342384775,
+            "fit_snr_db": 15.078925862116597,
+            "gain": 0.9538752413490638,
+            "polarity": 1,
+            "input_rms_dbfs": -49.76119615992343,
+            "search_boundary_peak": false,
+            "window": 9,
+            "channel": 1,
+            "input_host_start_seconds": 32215.35453075,
+            "latency_ms": 7.278585390561265,
+            "latency_frames_at_nominal_rate": 349.3720987469407,
+            "matched_output_host_start_seconds": 32215.36180933539,
+            "callback_entry_difference_ms": {
+              "mean": 2.8515921008440475,
+              "min": 2.386416668741731,
+              "max": 3.7674583327316213
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9649549126287906,
+            "second_peak_correlation": 0.057985254885714876,
+            "peak_margin": 0.9069696577430757,
+            "fit_snr_db": 14.906333189958403,
+            "gain": 0.9534856016735582,
+            "polarity": 1,
+            "input_rms_dbfs": -49.93481331780741,
+            "search_boundary_peak": false,
+            "window": 9,
+            "channel": 2,
+            "input_host_start_seconds": 32215.35453075,
+            "latency_ms": 7.278175084100816,
+            "latency_frames_at_nominal_rate": 349.3524040368392,
+            "matched_output_host_start_seconds": 32215.36180892508,
+            "callback_entry_difference_ms": {
+              "mean": 2.8515921008440475,
+              "min": 2.386416668741731,
+              "max": 3.7674583327316213
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9898555886227027,
+            "second_peak_correlation": 0.06122390089519417,
+            "peak_margin": 0.9286316877275086,
+            "fit_snr_db": 17.633964779871402,
+            "gain": 0.9811491077529239,
+            "polarity": 1,
+            "input_rms_dbfs": -49.635095679019216,
+            "search_boundary_peak": false,
+            "window": 10,
+            "channel": 1,
+            "input_host_start_seconds": 32215.65453075,
+            "latency_ms": 7.268802071356299,
+            "latency_frames_at_nominal_rate": 348.90249942510235,
+            "matched_output_host_start_seconds": 32215.66179955207,
+            "callback_entry_difference_ms": {
+              "mean": 2.8396702777978238,
+              "min": 2.379958332312526,
+              "max": 3.7634583313774783
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9903780117976462,
+            "second_peak_correlation": 0.04921640921385122,
+            "peak_margin": 0.941161602583795,
+            "fit_snr_db": 17.64641851820916,
+            "gain": 0.9822481423694118,
+            "polarity": 1,
+            "input_rms_dbfs": -50.01361056479355,
+            "search_boundary_peak": false,
+            "window": 10,
+            "channel": 2,
+            "input_host_start_seconds": 32215.65453075,
+            "latency_ms": 7.26912332643473,
+            "latency_frames_at_nominal_rate": 348.91791966886706,
+            "matched_output_host_start_seconds": 32215.661799873324,
+            "callback_entry_difference_ms": {
+              "mean": 2.8396702777978238,
+              "min": 2.379958332312526,
+              "max": 3.7634583313774783
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.961834224611958,
+            "second_peak_correlation": 0.05671206698767923,
+            "peak_margin": 0.9051221576242787,
+            "fit_snr_db": 18.269983951842224,
+            "gain": 0.9545615640229561,
+            "polarity": 1,
+            "input_rms_dbfs": -49.591089653113315,
+            "search_boundary_peak": false,
+            "window": 11,
+            "channel": 1,
+            "input_host_start_seconds": 32215.954530749998,
+            "latency_ms": 7.26162503385626,
+            "latency_frames_at_nominal_rate": 348.5580016251005,
+            "matched_output_host_start_seconds": 32215.96179237503,
+            "callback_entry_difference_ms": {
+              "mean": 2.8329135793852505,
+              "min": 2.3755000001983717,
+              "max": 3.746750000573229
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9608347117877352,
+            "second_peak_correlation": 0.05640501560047866,
+            "peak_margin": 0.9044296961872565,
+            "fit_snr_db": 18.23091819035298,
+            "gain": 0.9538855635646416,
+            "polarity": 1,
+            "input_rms_dbfs": -49.82632179756805,
+            "search_boundary_peak": false,
+            "window": 11,
+            "channel": 2,
+            "input_host_start_seconds": 32215.954530749998,
+            "latency_ms": 7.261413890502105,
+            "latency_frames_at_nominal_rate": 348.54786674410104,
+            "matched_output_host_start_seconds": 32215.96179216389,
+            "callback_entry_difference_ms": {
+              "mean": 2.8329135793852505,
+              "min": 2.3755000001983717,
+              "max": 3.746750000573229
+            }
+          }
+        ],
+        "channel_median_skew_ms": 0.0003605786248730425
+      },
+      {
+        "input": "d4_output",
+        "output": "d4_return",
+        "status": "measured",
+        "channels": [
+          {
+            "channel": 1,
+            "status": "measured",
+            "accepted_windows": 5,
+            "total_windows": 12,
+            "latency_ms": {
+              "median": 0.8748496124675317,
+              "min": 0.8744999792351262,
+              "max": 0.8750564042725398
+            },
+            "latency_frames_at_nominal_rate": {
+              "median": 41.99278139844152,
+              "min": 41.975999003286056,
+              "max": 42.002707405081914
+            },
+            "correlation": {
+              "median": 0.9732015054854193,
+              "min": 0.9278831127040985,
+              "max": 0.9954120448436067
+            },
+            "peak_margin": {
+              "median": 0.9113616196992408,
+              "min": 0.877678028884692,
+              "max": 0.9451705866933642
+            },
+            "fit_snr_db": {
+              "median": 12.528542406149278,
+              "min": 7.937956056185257,
+              "max": 20.345414714015533
+            },
+            "callback_entry_difference_ms": {
+              "median_window_mean": 6.333580381939959,
+              "min": 5.306041668518446,
+              "max": 6.694583331409376
+            }
+          },
+          {
+            "channel": 2,
+            "status": "measured",
+            "accepted_windows": 5,
+            "total_windows": 12,
+            "latency_ms": {
+              "median": 0.8748420392837305,
+              "min": 0.8746722186949937,
+              "max": 0.87507653192283
+            },
+            "latency_frames_at_nominal_rate": {
+              "median": 41.99241788561906,
+              "min": 41.9842664973597,
+              "max": 42.00367353229584
+            },
+            "correlation": {
+              "median": 0.9709791346829527,
+              "min": 0.9321325399249129,
+              "max": 0.9939391122892179
+            },
+            "peak_margin": {
+              "median": 0.9092655242068962,
+              "min": 0.8803828411051328,
+              "max": 0.9493838961414354
+            },
+            "fit_snr_db": {
+              "median": 12.175744619015436,
+              "min": 8.209170337512463,
+              "max": 19.126366904235045
+            },
+            "callback_entry_difference_ms": {
+              "median_window_mean": 6.333580381939959,
+              "min": 5.306041668518446,
+              "max": 6.694583331409376
+            }
+          }
+        ],
+        "windows": [
+          {
+            "status": "rejected",
+            "reason": "weak correlation (unrelated audio, noise, or FX transformation); poor delayed-signal fit",
+            "correlation": 0.5652068153150416,
+            "second_peak_correlation": 0.03317016775513607,
+            "peak_margin": 0.5320366475599055,
+            "fit_snr_db": -3.2854351726019675,
+            "gain": 0.9950539364099509,
+            "polarity": 1,
+            "input_rms_dbfs": -49.84210264714572,
+            "search_boundary_peak": false,
+            "window": 0,
+            "channel": 1,
+            "input_host_start_seconds": 32212.65453075,
+            "latency_ms": 0.8750187786732057,
+            "latency_frames_at_nominal_rate": 42.00090137631387,
+            "matched_output_host_start_seconds": 32212.655405768775,
+            "callback_entry_difference_ms": {
+              "mean": 6.333683940987005,
+              "min": 5.311958335369127,
+              "max": 6.690250000247033
+            }
+          },
+          {
+            "status": "rejected",
+            "reason": "weak correlation (unrelated audio, noise, or FX transformation); poor delayed-signal fit",
+            "correlation": 0.5221951514873217,
+            "second_peak_correlation": 0.03144364344608225,
+            "peak_margin": 0.4907515080412394,
+            "fit_snr_db": -4.2637536945017604,
+            "gain": 0.9984602485329963,
+            "polarity": 1,
+            "input_rms_dbfs": -50.21861758641257,
+            "search_boundary_peak": false,
+            "window": 0,
+            "channel": 2,
+            "input_host_start_seconds": 32212.65453075,
+            "latency_ms": 0.874944917204948,
+            "latency_frames_at_nominal_rate": 41.997356025837504,
+            "matched_output_host_start_seconds": 32212.655405694917,
+            "callback_entry_difference_ms": {
+              "mean": 6.333313307306475,
+              "min": 5.311958335369127,
+              "max": 6.690250000247033
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9732015054854193,
+            "second_peak_correlation": 0.06183988578617853,
+            "peak_margin": 0.9113616196992408,
+            "fit_snr_db": 12.528542406149278,
+            "gain": 0.9965884313612151,
+            "polarity": 1,
+            "input_rms_dbfs": -49.64448363445962,
+            "search_boundary_peak": false,
+            "window": 1,
+            "channel": 1,
+            "input_host_start_seconds": 32212.954530749998,
+            "latency_ms": 0.8750564042725398,
+            "latency_frames_at_nominal_rate": 42.002707405081914,
+            "matched_output_host_start_seconds": 32212.955405806402,
+            "callback_entry_difference_ms": {
+              "mean": 6.33320938656147,
+              "min": 5.30941666875151,
+              "max": 6.686458335025236
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9707134082246558,
+            "second_peak_correlation": 0.06144788401775953,
+            "peak_margin": 0.9092655242068962,
+            "fit_snr_db": 12.127894870828005,
+            "gain": 0.9983594477086963,
+            "polarity": 1,
+            "input_rms_dbfs": -49.975613270568466,
+            "search_boundary_peak": false,
+            "window": 1,
+            "channel": 2,
+            "input_host_start_seconds": 32212.954530749998,
+            "latency_ms": 0.8749806887633644,
+            "latency_frames_at_nominal_rate": 41.99907306064149,
+            "matched_output_host_start_seconds": 32212.955405730685,
+            "callback_entry_difference_ms": {
+              "mean": 6.33320938656147,
+              "min": 5.30941666875151,
+              "max": 6.686458335025236
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9954120448436067,
+            "second_peak_correlation": 0.05024145815024256,
+            "peak_margin": 0.9451705866933642,
+            "fit_snr_db": 20.345414714015533,
+            "gain": 0.997889893266162,
+            "polarity": 1,
+            "input_rms_dbfs": -49.706835793791626,
+            "search_boundary_peak": false,
+            "window": 2,
+            "channel": 1,
+            "input_host_start_seconds": 32213.254530749997,
+            "latency_ms": 0.8748365078669433,
+            "latency_frames_at_nominal_rate": 41.99215237761328,
+            "matched_output_host_start_seconds": 32213.255405586504,
+            "callback_entry_difference_ms": {
+              "mean": 6.333450072342354,
+              "min": 5.311375000019325,
+              "max": 6.690124999295222
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9939391122892179,
+            "second_peak_correlation": 0.04455521614778258,
+            "peak_margin": 0.9493838961414354,
+            "fit_snr_db": 19.126366904235045,
+            "gain": 0.9981871414671323,
+            "polarity": 1,
+            "input_rms_dbfs": -50.239322678780965,
+            "search_boundary_peak": false,
+            "window": 2,
+            "channel": 2,
+            "input_host_start_seconds": 32213.254530749997,
+            "latency_ms": 0.874785386809081,
+            "latency_frames_at_nominal_rate": 41.98969856683589,
+            "matched_output_host_start_seconds": 32213.255405535383,
+            "callback_entry_difference_ms": {
+              "mean": 6.333450072342354,
+              "min": 5.311375000019325,
+              "max": 6.690124999295222
+            }
+          },
+          {
+            "status": "rejected",
+            "reason": "weak correlation (unrelated audio, noise, or FX transformation); poor delayed-signal fit",
+            "correlation": 0.5521814863042355,
+            "second_peak_correlation": 0.04067589904517197,
+            "peak_margin": 0.5115055872590635,
+            "fit_snr_db": -3.605648401887085,
+            "gain": 0.9956601942256919,
+            "polarity": 1,
+            "input_rms_dbfs": -49.827100924881165,
+            "search_boundary_peak": false,
+            "window": 3,
+            "channel": 1,
+            "input_host_start_seconds": 32213.55453075,
+            "latency_ms": 0.875711861981177,
+            "latency_frames_at_nominal_rate": 42.034169375096496,
+            "matched_output_host_start_seconds": 32213.555406461863,
+            "callback_entry_difference_ms": {
+              "mean": 6.33319005787295,
+              "min": 5.3157083348196466,
+              "max": 6.683791667455807
+            }
+          },
+          {
+            "status": "rejected",
+            "reason": "weak correlation (unrelated audio, noise, or FX transformation); poor delayed-signal fit",
+            "correlation": 0.5165572446889428,
+            "second_peak_correlation": 0.037266282315758986,
+            "peak_margin": 0.4792909623731838,
+            "fit_snr_db": -4.405804822980965,
+            "gain": 0.986802766583209,
+            "polarity": 1,
+            "input_rms_dbfs": -50.16929472001592,
+            "search_boundary_peak": false,
+            "window": 3,
+            "channel": 2,
+            "input_host_start_seconds": 32213.55453075,
+            "latency_ms": 0.8753055049022087,
+            "latency_frames_at_nominal_rate": 42.01466423530602,
+            "matched_output_host_start_seconds": 32213.555406055504,
+            "callback_entry_difference_ms": {
+              "mean": 6.33319005787295,
+              "min": 5.3157083348196466,
+              "max": 6.683791667455807
+            }
+          },
+          {
+            "status": "rejected",
+            "reason": "weak correlation (unrelated audio, noise, or FX transformation); poor delayed-signal fit",
+            "correlation": 0.5942385172228369,
+            "second_peak_correlation": 0.049857633968690175,
+            "peak_margin": 0.5443808832541468,
+            "fit_snr_db": -2.63982058725654,
+            "gain": 0.9814889959964119,
+            "polarity": 1,
+            "input_rms_dbfs": -49.83657284370656,
+            "search_boundary_peak": false,
+            "window": 4,
+            "channel": 1,
+            "input_host_start_seconds": 32213.85453075,
+            "latency_ms": 0.874665580058089,
+            "latency_frames_at_nominal_rate": 41.983947842788275,
+            "matched_output_host_start_seconds": 32213.85540541558,
+            "callback_entry_difference_ms": {
+              "mean": 6.333302499988349,
+              "min": 5.312208333634771,
+              "max": 6.686583332339069
+            }
+          },
+          {
+            "status": "rejected",
+            "reason": "weak correlation (unrelated audio, noise, or FX transformation); poor delayed-signal fit",
+            "correlation": 0.5676994336755279,
+            "second_peak_correlation": 0.04647889117985123,
+            "peak_margin": 0.5212205424956766,
+            "fit_snr_db": -3.230458173513756,
+            "gain": 1.0028634515894026,
+            "polarity": 1,
+            "input_rms_dbfs": -50.08487558945401,
+            "search_boundary_peak": false,
+            "window": 4,
+            "channel": 2,
+            "input_host_start_seconds": 32213.85453075,
+            "latency_ms": 0.8750535069425686,
+            "latency_frames_at_nominal_rate": 42.00256833324329,
+            "matched_output_host_start_seconds": 32213.855405803504,
+            "callback_entry_difference_ms": {
+              "mean": 6.333302499988349,
+              "min": 5.312208333634771,
+              "max": 6.686583332339069
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9285707942118417,
+            "second_peak_correlation": 0.050892765327149654,
+            "peak_margin": 0.877678028884692,
+            "fit_snr_db": 7.974113673124476,
+            "gain": 0.986816064157993,
+            "polarity": 1,
+            "input_rms_dbfs": -49.890666285703695,
+            "search_boundary_peak": false,
+            "window": 5,
+            "channel": 1,
+            "input_host_start_seconds": 32214.15453075,
+            "latency_ms": 0.8749264458723321,
+            "latency_frames_at_nominal_rate": 41.99646940187194,
+            "matched_output_host_start_seconds": 32214.155405676443,
+            "callback_entry_difference_ms": {
+              "mean": 6.333726111123623,
+              "min": 5.321166667272337,
+              "max": 6.685500000457978
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9709791346829527,
+            "second_peak_correlation": 0.06923741271233985,
+            "peak_margin": 0.9017417219706129,
+            "fit_snr_db": 12.175744619015436,
+            "gain": 0.9951901361833921,
+            "polarity": 1,
+            "input_rms_dbfs": -50.1755908340197,
+            "search_boundary_peak": false,
+            "window": 5,
+            "channel": 2,
+            "input_host_start_seconds": 32214.15453075,
+            "latency_ms": 0.87507653192283,
+            "latency_frames_at_nominal_rate": 42.00367353229584,
+            "matched_output_host_start_seconds": 32214.155405826532,
+            "callback_entry_difference_ms": {
+              "mean": 6.333726111123623,
+              "min": 5.321166667272337,
+              "max": 6.685500000457978
+            }
+          },
+          {
+            "status": "rejected",
+            "reason": "weak correlation (unrelated audio, noise, or FX transformation); poor delayed-signal fit",
+            "correlation": 0.561536351467875,
+            "second_peak_correlation": 0.03495596781938853,
+            "peak_margin": 0.5265803836484865,
+            "fit_snr_db": -3.3675450441641877,
+            "gain": 1.009278469155172,
+            "polarity": 1,
+            "input_rms_dbfs": -49.800867457889254,
+            "search_boundary_peak": false,
+            "window": 6,
+            "channel": 1,
+            "input_host_start_seconds": 32214.454530749998,
+            "latency_ms": 0.8750050709425476,
+            "latency_frames_at_nominal_rate": 42.00024340524229,
+            "matched_output_host_start_seconds": 32214.455405755067,
+            "callback_entry_difference_ms": {
+              "mean": 6.33296053818842,
+              "min": 5.31300000147894,
+              "max": 6.693916668154998
+            }
+          },
+          {
+            "status": "rejected",
+            "reason": "weak correlation (unrelated audio, noise, or FX transformation); poor delayed-signal fit",
+            "correlation": 0.5236646903747403,
+            "second_peak_correlation": 0.036204165765022125,
+            "peak_margin": 0.48746052460971817,
+            "fit_snr_db": -4.2612156025585755,
+            "gain": 0.9895479240321258,
+            "polarity": 1,
+            "input_rms_dbfs": -49.966007912789145,
+            "search_boundary_peak": false,
+            "window": 6,
+            "channel": 2,
+            "input_host_start_seconds": 32214.454530749998,
+            "latency_ms": 0.8756354176149992,
+            "latency_frames_at_nominal_rate": 42.03050004551996,
+            "matched_output_host_start_seconds": 32214.455406385416,
+            "callback_entry_difference_ms": {
+              "mean": 6.33296053818842,
+              "min": 5.31300000147894,
+              "max": 6.693916668154998
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9278831127040985,
+            "second_peak_correlation": 0.048363221551498255,
+            "peak_margin": 0.8795198911526002,
+            "fit_snr_db": 7.937956056185257,
+            "gain": 0.9910034409322637,
+            "polarity": 1,
+            "input_rms_dbfs": -49.74278985298898,
+            "search_boundary_peak": false,
+            "window": 7,
+            "channel": 1,
+            "input_host_start_seconds": 32214.754530749997,
+            "latency_ms": 0.8744999792351262,
+            "latency_frames_at_nominal_rate": 41.975999003286056,
+            "matched_output_host_start_seconds": 32214.755405249976,
+            "callback_entry_difference_ms": {
+              "mean": 6.333735156244226,
+              "min": 5.309291667799698,
+              "max": 6.687083332508337
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9321325399249129,
+            "second_peak_correlation": 0.05174969881978013,
+            "peak_margin": 0.8803828411051328,
+            "fit_snr_db": 8.209170337512463,
+            "gain": 0.9914350669092169,
+            "polarity": 1,
+            "input_rms_dbfs": -50.191531686841685,
+            "search_boundary_peak": false,
+            "window": 7,
+            "channel": 2,
+            "input_host_start_seconds": 32214.754530749997,
+            "latency_ms": 0.8746722186949937,
+            "latency_frames_at_nominal_rate": 41.9842664973597,
+            "matched_output_host_start_seconds": 32214.755405422216,
+            "callback_entry_difference_ms": {
+              "mean": 6.333735156244226,
+              "min": 5.309291667799698,
+              "max": 6.687083332508337
+            }
+          },
+          {
+            "status": "rejected",
+            "reason": "weak correlation (unrelated audio, noise, or FX transformation); poor delayed-signal fit",
+            "correlation": 0.5923230790173929,
+            "second_peak_correlation": 0.042910350798709675,
+            "peak_margin": 0.5494127282186833,
+            "fit_snr_db": -2.681857510869843,
+            "gain": 0.9858237259848939,
+            "polarity": 1,
+            "input_rms_dbfs": -49.84247650101835,
+            "search_boundary_peak": false,
+            "window": 8,
+            "channel": 1,
+            "input_host_start_seconds": 32215.05453075,
+            "latency_ms": 0.8747949204804799,
+            "latency_frames_at_nominal_rate": 41.990156183063036,
+            "matched_output_host_start_seconds": 32215.05540554492,
+            "callback_entry_difference_ms": {
+              "mean": 6.33274025174943,
+              "min": 5.310708333126968,
+              "max": 6.685291664325632
+            }
+          },
+          {
+            "status": "rejected",
+            "reason": "weak correlation (unrelated audio, noise, or FX transformation); poor delayed-signal fit",
+            "correlation": 0.5476628985563964,
+            "second_peak_correlation": 0.03832070127056448,
+            "peak_margin": 0.5093421972858319,
+            "fit_snr_db": -3.6946021800755275,
+            "gain": 1.0028753835914925,
+            "polarity": 1,
+            "input_rms_dbfs": -50.25195521137733,
+            "search_boundary_peak": false,
+            "window": 8,
+            "channel": 2,
+            "input_host_start_seconds": 32215.05453075,
+            "latency_ms": 0.8752885553974881,
+            "latency_frames_at_nominal_rate": 42.01385065907943,
+            "matched_output_host_start_seconds": 32215.055406038555,
+            "callback_entry_difference_ms": {
+              "mean": 6.33274025174943,
+              "min": 5.310708333126968,
+              "max": 6.685291664325632
+            }
+          },
+          {
+            "status": "rejected",
+            "reason": "weak correlation (unrelated audio, noise, or FX transformation); poor delayed-signal fit",
+            "correlation": 0.5700180994689512,
+            "second_peak_correlation": 0.032781701425900055,
+            "peak_margin": 0.5372363980430511,
+            "fit_snr_db": -3.1762609387424052,
+            "gain": 0.9968606726776446,
+            "polarity": 1,
+            "input_rms_dbfs": -49.710826391488354,
+            "search_boundary_peak": false,
+            "window": 9,
+            "channel": 1,
+            "input_host_start_seconds": 32215.35453075,
+            "latency_ms": 0.8749907927389939,
+            "latency_frames_at_nominal_rate": 41.99955805147171,
+            "matched_output_host_start_seconds": 32215.355405740793,
+            "callback_entry_difference_ms": {
+              "mean": 6.333445477446023,
+              "min": 5.311041666573146,
+              "max": 6.691499998851214
+            }
+          },
+          {
+            "status": "rejected",
+            "reason": "weak correlation (unrelated audio, noise, or FX transformation); poor delayed-signal fit",
+            "correlation": 0.5315510708205298,
+            "second_peak_correlation": 0.030511155616632785,
+            "peak_margin": 0.501039915203897,
+            "fit_snr_db": -4.069757791313621,
+            "gain": 0.9889185359755712,
+            "polarity": 1,
+            "input_rms_dbfs": -49.944748888719516,
+            "search_boundary_peak": false,
+            "window": 9,
+            "channel": 2,
+            "input_host_start_seconds": 32215.35453075,
+            "latency_ms": 0.8754052846154206,
+            "latency_frames_at_nominal_rate": 42.01945366154018,
+            "matched_output_host_start_seconds": 32215.355406155282,
+            "callback_entry_difference_ms": {
+              "mean": 6.333445477446023,
+              "min": 5.311041666573146,
+              "max": 6.691499998851214
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9764463966457134,
+            "second_peak_correlation": 0.05587457799891349,
+            "peak_margin": 0.9205718186467999,
+            "fit_snr_db": 13.106399844789845,
+            "gain": 0.9994313246760383,
+            "polarity": 1,
+            "input_rms_dbfs": -49.63667152487601,
+            "search_boundary_peak": false,
+            "window": 10,
+            "channel": 1,
+            "input_host_start_seconds": 32215.65453075,
+            "latency_ms": 0.8748496124675317,
+            "latency_frames_at_nominal_rate": 41.99278139844152,
+            "matched_output_host_start_seconds": 32215.65540559961,
+            "callback_entry_difference_ms": {
+              "mean": 6.333580381939959,
+              "min": 5.306041668518446,
+              "max": 6.694583331409376
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9731204199250902,
+            "second_peak_correlation": 0.04593397678480754,
+            "peak_margin": 0.9271864431402828,
+            "fit_snr_db": 12.510450330467789,
+            "gain": 0.9991558166533001,
+            "polarity": 1,
+            "input_rms_dbfs": -49.967429687719914,
+            "search_boundary_peak": false,
+            "window": 10,
+            "channel": 2,
+            "input_host_start_seconds": 32215.65453075,
+            "latency_ms": 0.8748420392837305,
+            "latency_frames_at_nominal_rate": 41.99241788561906,
+            "matched_output_host_start_seconds": 32215.65540559204,
+            "callback_entry_difference_ms": {
+              "mean": 6.333580381939959,
+              "min": 5.306041668518446,
+              "max": 6.694583331409376
+            }
+          },
+          {
+            "status": "rejected",
+            "reason": "weak correlation (unrelated audio, noise, or FX transformation); poor delayed-signal fit",
+            "correlation": 0.6180751370477247,
+            "second_peak_correlation": 0.0330929765011551,
+            "peak_margin": 0.5849821605465696,
+            "fit_snr_db": -2.0894122690899994,
+            "gain": 0.9982884638352046,
+            "polarity": 1,
+            "input_rms_dbfs": -49.56769873174083,
+            "search_boundary_peak": false,
+            "window": 11,
+            "channel": 1,
+            "input_host_start_seconds": 32215.954530749998,
+            "latency_ms": 0.8749918096264049,
+            "latency_frames_at_nominal_rate": 41.99960686206743,
+            "matched_output_host_start_seconds": 32215.955405741806,
+            "callback_entry_difference_ms": {
+              "mean": 6.333162870351872,
+              "min": 5.312416666129138,
+              "max": 6.690291666018311
+            }
+          },
+          {
+            "status": "rejected",
+            "reason": "weak correlation (unrelated audio, noise, or FX transformation); poor delayed-signal fit",
+            "correlation": 0.5797737332696182,
+            "second_peak_correlation": 0.03200865290678971,
+            "peak_margin": 0.5477650803628286,
+            "fit_snr_db": -2.9613687419763366,
+            "gain": 0.9985059384039378,
+            "polarity": 1,
+            "input_rms_dbfs": -49.841277445824794,
+            "search_boundary_peak": false,
+            "window": 11,
+            "channel": 2,
+            "input_host_start_seconds": 32215.954530749998,
+            "latency_ms": 0.8749044244681133,
+            "latency_frames_at_nominal_rate": 41.99541237446944,
+            "matched_output_host_start_seconds": 32215.955405654422,
+            "callback_entry_difference_ms": {
+              "mean": 6.333162870351872,
+              "min": 5.312416666129138,
+              "max": 6.690291666018311
+            }
+          }
+        ],
+        "channel_median_skew_ms": 7.5731838011794395e-06
+      },
+      {
+        "input": "d4_return",
+        "output": "rme_output",
+        "status": "measured",
+        "channels": [
+          {
+            "channel": 1,
+            "status": "measured",
+            "accepted_windows": 12,
+            "total_windows": 12,
+            "latency_ms": {
+              "median": 6.601713309892635,
+              "min": 6.588144699481178,
+              "max": 6.617935306422737
+            },
+            "latency_frames_at_nominal_rate": {
+              "median": 316.8822388748465,
+              "min": 316.23094557509654,
+              "max": 317.6608947082914
+            },
+            "correlation": {
+              "median": 0.9867980681315484,
+              "min": 0.9718197648215966,
+              "max": 0.9964904220495445
+            },
+            "peak_margin": {
+              "median": 0.5278203978489671,
+              "min": 0.46627989515266033,
+              "max": 0.9384623090209546
+            },
+            "fit_snr_db": {
+              "median": 17.894444710631323,
+              "min": 12.39251380324795,
+              "max": 22.607978108147606
+            },
+            "callback_entry_difference_ms": {
+              "median_window_mean": 1.9152904109005755,
+              "min": 1.4246249993448146,
+              "max": 2.8473333331930917
+            }
+          },
+          {
+            "channel": 2,
+            "status": "measured",
+            "accepted_windows": 12,
+            "total_windows": 12,
+            "latency_ms": {
+              "median": 6.601686097506839,
+              "min": 6.58894780111666,
+              "max": 6.61925491775957
+            },
+            "latency_frames_at_nominal_rate": {
+              "median": 316.88093268032827,
+              "min": 316.2694944535997,
+              "max": 317.7242360524594
+            },
+            "correlation": {
+              "median": 0.9887418392566256,
+              "min": 0.9713053122390563,
+              "max": 0.9971732379472232
+            },
+            "peak_margin": {
+              "median": 0.49468522276350946,
+              "min": 0.42670220518583657,
+              "max": 0.9467087823670332
+            },
+            "fit_snr_db": {
+              "median": 18.59663753095048,
+              "min": 13.331741819359792,
+              "max": 23.88893570908173
+            },
+            "callback_entry_difference_ms": {
+              "median_window_mean": 1.9189465017570404,
+              "min": 1.4246249993448146,
+              "max": 2.8473333331930917
+            }
+          }
+        ],
+        "windows": [
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9796639218863009,
+            "second_peak_correlation": 0.5133840267336406,
+            "peak_margin": 0.46627989515266033,
+            "fit_snr_db": 16.176214390644173,
+            "gain": 0.9787169944493359,
+            "polarity": 1,
+            "input_rms_dbfs": -44.8658929671022,
+            "search_boundary_peak": false,
+            "window": 0,
+            "channel": 1,
+            "input_host_start_seconds": 32212.65389270833,
+            "latency_ms": 6.617935306422737,
+            "latency_frames_at_nominal_rate": 317.6608947082914,
+            "matched_output_host_start_seconds": 32212.660510643636,
+            "callback_entry_difference_ms": {
+              "mean": 1.9314797797763579,
+              "min": 1.440041665773606,
+              "max": 2.8473333331930917
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9875319930433417,
+            "second_peak_correlation": 0.5608297878575051,
+            "peak_margin": 0.42670220518583657,
+            "fit_snr_db": 17.796455878622485,
+            "gain": 0.9862374130294553,
+            "polarity": 1,
+            "input_rms_dbfs": -44.540284053750796,
+            "search_boundary_peak": false,
+            "window": 0,
+            "channel": 2,
+            "input_host_start_seconds": 32212.65389270833,
+            "latency_ms": 6.61925491775957,
+            "latency_frames_at_nominal_rate": 317.7242360524594,
+            "matched_output_host_start_seconds": 32212.660511963248,
+            "callback_entry_difference_ms": {
+              "mean": 1.9314797797763579,
+              "min": 1.440041665773606,
+              "max": 2.8473333331930917
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9838183176369141,
+            "second_peak_correlation": 0.06630621803984296,
+            "peak_margin": 0.9175120995970711,
+            "fit_snr_db": 17.434808663383382,
+            "gain": 0.9873830927099791,
+            "polarity": 1,
+            "input_rms_dbfs": -49.488626267646595,
+            "search_boundary_peak": false,
+            "window": 1,
+            "channel": 1,
+            "input_host_start_seconds": 32212.95389270833,
+            "latency_ms": 6.608498801842877,
+            "latency_frames_at_nominal_rate": 317.2079424884581,
+            "matched_output_host_start_seconds": 32212.960501207133,
+            "callback_entry_difference_ms": {
+              "mean": 1.9298664585716727,
+              "min": 1.4298749993031379,
+              "max": 2.8377499984344468
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9847364828122868,
+            "second_peak_correlation": 0.058835425511809,
+            "peak_margin": 0.9259010573004778,
+            "fit_snr_db": 17.761975565501324,
+            "gain": 0.9875942583057755,
+            "polarity": 1,
+            "input_rms_dbfs": -49.780839255474746,
+            "search_boundary_peak": false,
+            "window": 1,
+            "channel": 2,
+            "input_host_start_seconds": 32212.95389270833,
+            "latency_ms": 6.6084930238339945,
+            "latency_frames_at_nominal_rate": 317.20766514403175,
+            "matched_output_host_start_seconds": 32212.960501201353,
+            "callback_entry_difference_ms": {
+              "mean": 1.9298664585716727,
+              "min": 1.4298749993031379,
+              "max": 2.8377499984344468
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9903878408888466,
+            "second_peak_correlation": 0.05192553186789199,
+            "peak_margin": 0.9384623090209546,
+            "fit_snr_db": 18.849097430324928,
+            "gain": 0.9977729867347577,
+            "polarity": 1,
+            "input_rms_dbfs": -49.64020285515866,
+            "search_boundary_peak": false,
+            "window": 2,
+            "channel": 1,
+            "input_host_start_seconds": 32213.25389270833,
+            "latency_ms": 6.601365277106815,
+            "latency_frames_at_nominal_rate": 316.86553330112713,
+            "matched_output_host_start_seconds": 32213.260494073606,
+            "callback_entry_difference_ms": {
+              "mean": 1.9022801244275596,
+              "min": 1.4289166647358797,
+              "max": 2.8319166667643003
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9899211120565466,
+            "second_peak_correlation": 0.043212329689513516,
+            "peak_margin": 0.9467087823670332,
+            "fit_snr_db": 18.66464040974118,
+            "gain": 0.9977188399726169,
+            "polarity": 1,
+            "input_rms_dbfs": -50.14872914894184,
+            "search_boundary_peak": false,
+            "window": 2,
+            "channel": 2,
+            "input_host_start_seconds": 32213.25389270833,
+            "latency_ms": 6.601341380046681,
+            "latency_frames_at_nominal_rate": 316.8643862422407,
+            "matched_output_host_start_seconds": 32213.26049404971,
+            "callback_entry_difference_ms": {
+              "mean": 1.9022801244275596,
+              "min": 1.4289166647358797,
+              "max": 2.8319166667643003
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.987261725964127,
+            "second_peak_correlation": 0.4905144897650419,
+            "peak_margin": 0.49674723619908506,
+            "fit_snr_db": 16.035302248451547,
+            "gain": 0.9939679062688392,
+            "polarity": 1,
+            "input_rms_dbfs": -44.630429524729855,
+            "search_boundary_peak": false,
+            "window": 3,
+            "channel": 1,
+            "input_host_start_seconds": 32213.553892708333,
+            "latency_ms": 6.60506501133748,
+            "latency_frames_at_nominal_rate": 317.04312054419904,
+            "matched_output_host_start_seconds": 32213.560497773346,
+            "callback_entry_difference_ms": {
+              "mean": 1.9344366058195799,
+              "min": 1.444041667127749,
+              "max": 2.837125000951346
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9921460251991031,
+            "second_peak_correlation": 0.5646993434802041,
+            "peak_margin": 0.427446681718899,
+            "fit_snr_db": 18.36413419127599,
+            "gain": 0.994966159631763,
+            "polarity": 1,
+            "input_rms_dbfs": -44.51686465430726,
+            "search_boundary_peak": false,
+            "window": 3,
+            "channel": 2,
+            "input_host_start_seconds": 32213.553892708333,
+            "latency_ms": 6.605880460355418,
+            "latency_frames_at_nominal_rate": 317.08226209706004,
+            "matched_output_host_start_seconds": 32213.56049858879,
+            "callback_entry_difference_ms": {
+              "mean": 1.9344366058195799,
+              "min": 1.444041667127749,
+              "max": 2.837125000951346
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9914307143229695,
+            "second_peak_correlation": 0.47012493837256925,
+            "peak_margin": 0.5213057759504003,
+            "fit_snr_db": 17.60988663405079,
+            "gain": 1.0024528238525594,
+            "polarity": 1,
+            "input_rms_dbfs": -45.48909495484501,
+            "search_boundary_peak": false,
+            "window": 4,
+            "channel": 1,
+            "input_host_start_seconds": 32213.853892708332,
+            "latency_ms": 6.604130219353603,
+            "latency_frames_at_nominal_rate": 316.99825052897296,
+            "matched_output_host_start_seconds": 32213.86049683855,
+            "callback_entry_difference_ms": {
+              "mean": 1.921196310749767,
+              "min": 1.438458333723247,
+              "max": 2.8412083338480443
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9930401267725285,
+            "second_peak_correlation": 0.5204189557384514,
+            "peak_margin": 0.4726211710340771,
+            "fit_snr_db": 18.528634652159777,
+            "gain": 1.0012659685941443,
+            "polarity": 1,
+            "input_rms_dbfs": -45.15776142074482,
+            "search_boundary_peak": false,
+            "window": 4,
+            "channel": 2,
+            "input_host_start_seconds": 32213.853892708332,
+            "latency_ms": 6.604246308692881,
+            "latency_frames_at_nominal_rate": 317.00382281725825,
+            "matched_output_host_start_seconds": 32213.86049695464,
+            "callback_entry_difference_ms": {
+              "mean": 1.921196310749767,
+              "min": 1.438458333723247,
+              "max": 2.8412083338480443
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9718197648215966,
+            "second_peak_correlation": 0.05738645216992324,
+            "peak_margin": 0.9144333126516734,
+            "fit_snr_db": 12.39251380324795,
+            "gain": 0.97121083396761,
+            "polarity": 1,
+            "input_rms_dbfs": -49.20288299095115,
+            "search_boundary_peak": false,
+            "window": 5,
+            "channel": 1,
+            "input_host_start_seconds": 32214.15389270833,
+            "latency_ms": 6.603457537780514,
+            "latency_frames_at_nominal_rate": 316.9659618134647,
+            "matched_output_host_start_seconds": 32214.16049616587,
+            "callback_entry_difference_ms": {
+              "mean": 1.9345305873614254,
+              "min": 1.4508749991364311,
+              "max": 2.843958332960028
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9769079956343603,
+            "second_peak_correlation": 0.06730217689040616,
+            "peak_margin": 0.9096058187439541,
+            "fit_snr_db": 13.331741819359792,
+            "gain": 0.9723412559726416,
+            "polarity": 1,
+            "input_rms_dbfs": -49.807214703795246,
+            "search_boundary_peak": false,
+            "window": 5,
+            "channel": 2,
+            "input_host_start_seconds": 32214.15389270833,
+            "latency_ms": 6.603124477558712,
+            "latency_frames_at_nominal_rate": 316.94997492281817,
+            "matched_output_host_start_seconds": 32214.16049583281,
+            "callback_entry_difference_ms": {
+              "mean": 1.9345305873614254,
+              "min": 1.4508749991364311,
+              "max": 2.843958332960028
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9863344102989697,
+            "second_peak_correlation": 0.497000883423318,
+            "peak_margin": 0.48933352687565174,
+            "fit_snr_db": 17.94635210186024,
+            "gain": 0.9879266557404031,
+            "polarity": 1,
+            "input_rms_dbfs": -44.79573061635677,
+            "search_boundary_peak": false,
+            "window": 6,
+            "channel": 1,
+            "input_host_start_seconds": 32214.45389270833,
+            "latency_ms": 6.598590401090358,
+            "latency_frames_at_nominal_rate": 316.73233925233717,
+            "matched_output_host_start_seconds": 32214.46049129873,
+            "callback_entry_difference_ms": {
+              "mean": 1.902321582979817,
+              "min": 1.4315833359432872,
+              "max": 2.8249583338038065
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9878328308317347,
+            "second_peak_correlation": 0.5553210490579976,
+            "peak_margin": 0.43251178177373706,
+            "fit_snr_db": 19.168219587503874,
+            "gain": 0.9892867257571153,
+            "polarity": 1,
+            "input_rms_dbfs": -44.48675749013142,
+            "search_boundary_peak": false,
+            "window": 6,
+            "channel": 2,
+            "input_host_start_seconds": 32214.45389270833,
+            "latency_ms": 6.597193162600923,
+            "latency_frames_at_nominal_rate": 316.6652718048443,
+            "matched_output_host_start_seconds": 32214.460489901492,
+            "callback_entry_difference_ms": {
+              "mean": 1.902321582979817,
+              "min": 1.4315833359432872,
+              "max": 2.8249583338038065
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9884713695850741,
+            "second_peak_correlation": 0.05883811452719228,
+            "peak_margin": 0.9296332550578819,
+            "fit_snr_db": 17.842537319402407,
+            "gain": 0.9810504074192341,
+            "polarity": 1,
+            "input_rms_dbfs": -49.067149754743554,
+            "search_boundary_peak": false,
+            "window": 7,
+            "channel": 1,
+            "input_host_start_seconds": 32214.75389270833,
+            "latency_ms": 6.601373702810054,
+            "latency_frames_at_nominal_rate": 316.8659377348826,
+            "matched_output_host_start_seconds": 32214.76049408203,
+            "callback_entry_difference_ms": {
+              "mean": 1.9093845110513838,
+              "min": 1.4451666684180964,
+              "max": 2.8451250000216532
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9896508476815166,
+            "second_peak_correlation": 0.055466045123921365,
+            "peak_margin": 0.9341848025575952,
+            "fit_snr_db": 18.013160438071594,
+            "gain": 0.9848395967792,
+            "polarity": 1,
+            "input_rms_dbfs": -49.48715935588865,
+            "search_boundary_peak": false,
+            "window": 7,
+            "channel": 2,
+            "input_host_start_seconds": 32214.75389270833,
+            "latency_ms": 6.601616924597635,
+            "latency_frames_at_nominal_rate": 316.87761238068646,
+            "matched_output_host_start_seconds": 32214.760494325255,
+            "callback_entry_difference_ms": {
+              "mean": 1.916696692764314,
+              "min": 1.4451666684180964,
+              "max": 2.8451250000216532
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9804299620226213,
+            "second_peak_correlation": 0.4681149972547286,
+            "peak_margin": 0.5123149647678927,
+            "fit_snr_db": 19.744119257682748,
+            "gain": 0.9800689911387113,
+            "polarity": 1,
+            "input_rms_dbfs": -45.38874487814452,
+            "search_boundary_peak": false,
+            "window": 8,
+            "channel": 1,
+            "input_host_start_seconds": 32215.053892708333,
+            "latency_ms": 6.595131145062837,
+            "latency_frames_at_nominal_rate": 316.56629496301616,
+            "matched_output_host_start_seconds": 32215.060487839477,
+            "callback_entry_difference_ms": {
+              "mean": 1.9061336342249686,
+              "min": 1.4259999989008065,
+              "max": 2.8272499985178
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9814635248410015,
+            "second_peak_correlation": 0.49227120352753334,
+            "peak_margin": 0.4891923213134682,
+            "fit_snr_db": 20.46253862202182,
+            "gain": 0.9816768746545741,
+            "polarity": 1,
+            "input_rms_dbfs": -44.95677559872532,
+            "search_boundary_peak": false,
+            "window": 8,
+            "channel": 2,
+            "input_host_start_seconds": 32215.053892708333,
+            "latency_ms": 6.59482380244482,
+            "latency_frames_at_nominal_rate": 316.5515425173513,
+            "matched_output_host_start_seconds": 32215.060487532133,
+            "callback_entry_difference_ms": {
+              "mean": 1.9061336342249686,
+              "min": 1.4259999989008065,
+              "max": 2.8272499985178
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9906485953272817,
+            "second_peak_correlation": 0.5030501144835448,
+            "peak_margin": 0.4875984808437369,
+            "fit_snr_db": 19.34971222351088,
+            "gain": 0.9880122245844647,
+            "polarity": 1,
+            "input_rms_dbfs": -44.89510050327958,
+            "search_boundary_peak": false,
+            "window": 9,
+            "channel": 1,
+            "input_host_start_seconds": 32215.353892708332,
+            "latency_ms": 6.588144699481178,
+            "latency_frames_at_nominal_rate": 316.23094557509654,
+            "matched_output_host_start_seconds": 32215.360480853033,
+            "callback_entry_difference_ms": {
+              "mean": 1.9069946787590197,
+              "min": 1.4246249993448146,
+              "max": 2.8305416672083084
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9913747276866054,
+            "second_peak_correlation": 0.5591160380942574,
+            "peak_margin": 0.43225868959234803,
+            "fit_snr_db": 20.024472082423745,
+            "gain": 0.9889279844677592,
+            "polarity": 1,
+            "input_rms_dbfs": -44.556995013155515,
+            "search_boundary_peak": false,
+            "window": 9,
+            "channel": 2,
+            "input_host_start_seconds": 32215.353892708332,
+            "latency_ms": 6.58894780111666,
+            "latency_frames_at_nominal_rate": 316.2694944535997,
+            "matched_output_host_start_seconds": 32215.360481656135,
+            "callback_entry_difference_ms": {
+              "mean": 1.9069946787590197,
+              "min": 1.4246249993448146,
+              "max": 2.8305416672083084
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9723562171492377,
+            "second_peak_correlation": 0.059700800607573566,
+            "peak_margin": 0.9126554165416642,
+            "fit_snr_db": 19.010723574695554,
+            "gain": 0.9575363010525652,
+            "polarity": 1,
+            "input_rms_dbfs": -49.47322187973849,
+            "search_boundary_peak": false,
+            "window": 10,
+            "channel": 1,
+            "input_host_start_seconds": 32215.65389270833,
+            "latency_ms": 6.5961941165308025,
+            "latency_frames_at_nominal_rate": 316.6173175934785,
+            "matched_output_host_start_seconds": 32215.66048890245,
+            "callback_entry_difference_ms": {
+              "mean": 1.907787702567071,
+              "min": 1.4270833344198763,
+              "max": 2.8283749998081475
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9713053122390563,
+            "second_peak_correlation": 0.06433699013592255,
+            "peak_margin": 0.9069683221031337,
+            "fit_snr_db": 18.999913350107136,
+            "gain": 0.9570091061371768,
+            "polarity": 1,
+            "input_rms_dbfs": -49.764712102179104,
+            "search_boundary_peak": false,
+            "window": 10,
+            "channel": 2,
+            "input_host_start_seconds": 32215.65389270833,
+            "latency_ms": 6.5958788706305045,
+            "latency_frames_at_nominal_rate": 316.60218579026423,
+            "matched_output_host_start_seconds": 32215.6604885872,
+            "callback_entry_difference_ms": {
+              "mean": 1.907787702567071,
+              "min": 1.4270833344198763,
+              "max": 2.8283749998081475
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9964904220495445,
+            "second_peak_correlation": 0.46215540230201063,
+            "peak_margin": 0.5343350197475338,
+            "fit_snr_db": 22.607978108147606,
+            "gain": 0.9919674922119442,
+            "polarity": 1,
+            "input_rms_dbfs": -45.49341240015486,
+            "search_boundary_peak": false,
+            "window": 11,
+            "channel": 1,
+            "input_host_start_seconds": 32215.95389270833,
+            "latency_ms": 6.602052916975216,
+            "latency_frames_at_nominal_rate": 316.89854001481035,
+            "matched_output_host_start_seconds": 32215.960494761246,
+            "callback_entry_difference_ms": {
+              "mean": 1.9266170889639196,
+              "min": 1.448041668481892,
+              "max": 2.836333333107177
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9971732379472232,
+            "second_peak_correlation": 0.4969951137336725,
+            "peak_margin": 0.5001781242135508,
+            "fit_snr_db": 23.88893570908173,
+            "gain": 0.9933595896290006,
+            "polarity": 1,
+            "input_rms_dbfs": -45.203720186605985,
+            "search_boundary_peak": false,
+            "window": 11,
+            "channel": 2,
+            "input_host_start_seconds": 32215.95389270833,
+            "latency_ms": 6.601755270416044,
+            "latency_frames_at_nominal_rate": 316.8842529799701,
+            "matched_output_host_start_seconds": 32215.9604944636,
+            "callback_entry_difference_ms": {
+              "mean": 1.9266170889639196,
+              "min": 1.448041668481892,
+              "max": 2.836333333107177
+            }
+          }
+        ],
+        "channel_median_skew_ms": 2.721238579628249e-05
+      },
+      {
+        "input": "pc_tap",
+        "output": "rme_output",
+        "status": "measured",
+        "channels": [
+          {
+            "channel": 1,
+            "status": "measured",
+            "accepted_windows": 5,
+            "total_windows": 12,
+            "latency_ms": {
+              "median": 14.75545701317313,
+              "min": 14.739806437707545,
+              "max": 14.769904042514618
+            },
+            "latency_frames_at_nominal_rate": {
+              "median": 708.2619366323103,
+              "min": 707.5107090099622,
+              "max": 708.9553940407017
+            },
+            "correlation": {
+              "median": 0.9400260010878732,
+              "min": 0.9100248986173994,
+              "max": 0.9759213187657553
+            },
+            "peak_margin": {
+              "median": 0.8812961170021276,
+              "min": 0.847850885257976,
+              "max": 0.9118165896323236
+            },
+            "fit_snr_db": {
+              "median": 8.92572195575871,
+              "min": 7.057776424051144,
+              "max": 13.022705729984942
+            },
+            "callback_entry_difference_ms": {
+              "median_window_mean": 11.092052803650555,
+              "min": 10.508958333957708,
+              "max": 11.906916664884193
+            }
+          },
+          {
+            "channel": 2,
+            "status": "measured",
+            "accepted_windows": 5,
+            "total_windows": 12,
+            "latency_ms": {
+              "median": 14.755440783455077,
+              "min": 14.739880324383202,
+              "max": 14.769939096857044
+            },
+            "latency_frames_at_nominal_rate": {
+              "median": 708.2611576058437,
+              "min": 707.5142555703937,
+              "max": 708.9570766491381
+            },
+            "correlation": {
+              "median": 0.9503423403428147,
+              "min": 0.8962026441506494,
+              "max": 0.9731218742845135
+            },
+            "peak_margin": {
+              "median": 0.8929592180629303,
+              "min": 0.8526708305803902,
+              "max": 0.9119768908532513
+            },
+            "fit_snr_db": {
+              "median": 12.077463560233827,
+              "min": 6.251913139459109,
+              "max": 12.561492067058754
+            },
+            "callback_entry_difference_ms": {
+              "median_window_mean": 11.092052803650555,
+              "min": 10.508958333957708,
+              "max": 11.906916664884193
+            }
+          }
+        ],
+        "windows": [
+          {
+            "status": "rejected",
+            "reason": "weak correlation (unrelated audio, noise, or FX transformation); poor delayed-signal fit",
+            "correlation": 0.5716764367353222,
+            "second_peak_correlation": 0.031407909398412585,
+            "peak_margin": 0.5402685273369097,
+            "fit_snr_db": -3.241754452049388,
+            "gain": 0.9775162278754651,
+            "polarity": 1,
+            "input_rms_dbfs": -49.640802794713395,
+            "search_boundary_peak": false,
+            "window": 0,
+            "channel": 1,
+            "input_host_start_seconds": 32212.65389270833,
+            "latency_ms": 14.773968678297962,
+            "latency_frames_at_nominal_rate": 709.1504965583022,
+            "matched_output_host_start_seconds": 32212.66866667701,
+            "callback_entry_difference_ms": {
+              "mean": 11.11372367153889,
+              "min": 10.517624999920372,
+              "max": 11.895125000592088
+            }
+          },
+          {
+            "status": "rejected",
+            "reason": "weak correlation (unrelated audio, noise, or FX transformation); poor delayed-signal fit",
+            "correlation": 0.5321836940443325,
+            "second_peak_correlation": 0.0330856558077707,
+            "peak_margin": 0.49909803823656185,
+            "fit_snr_db": -4.150441607978167,
+            "gain": 0.9826186910957556,
+            "polarity": 1,
+            "input_rms_dbfs": -49.97203352176327,
+            "search_boundary_peak": false,
+            "window": 0,
+            "channel": 2,
+            "input_host_start_seconds": 32212.65389270833,
+            "latency_ms": 14.773841398479892,
+            "latency_frames_at_nominal_rate": 709.1443871270349,
+            "matched_output_host_start_seconds": 32212.66866654973,
+            "callback_entry_difference_ms": {
+              "mean": 11.11372367153889,
+              "min": 10.517624999920372,
+              "max": 11.895125000592088
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9759213187657553,
+            "second_peak_correlation": 0.06410472913343171,
+            "peak_margin": 0.9118165896323236,
+            "fit_snr_db": 13.022705729984942,
+            "gain": 0.9924663969683407,
+            "polarity": 1,
+            "input_rms_dbfs": -49.494050288443646,
+            "search_boundary_peak": false,
+            "window": 1,
+            "channel": 1,
+            "input_host_start_seconds": 32212.95389270833,
+            "latency_ms": 14.769904042514618,
+            "latency_frames_at_nominal_rate": 708.9553940407017,
+            "matched_output_host_start_seconds": 32212.968662612373,
+            "callback_entry_difference_ms": {
+              "mean": 11.100006050447114,
+              "min": 10.514958332350943,
+              "max": 11.897374999534804
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9731218742845135,
+            "second_peak_correlation": 0.06114498343126219,
+            "peak_margin": 0.9119768908532513,
+            "fit_snr_db": 12.516865070270892,
+            "gain": 0.9943357642502977,
+            "polarity": 1,
+            "input_rms_dbfs": -49.84707128326675,
+            "search_boundary_peak": false,
+            "window": 1,
+            "channel": 2,
+            "input_host_start_seconds": 32212.95389270833,
+            "latency_ms": 14.769939096857044,
+            "latency_frames_at_nominal_rate": 708.9570766491381,
+            "matched_output_host_start_seconds": 32212.96866264743,
+            "callback_entry_difference_ms": {
+              "mean": 11.100006050447114,
+              "min": 10.514958332350943,
+              "max": 11.897374999534804
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9100248986173994,
+            "second_peak_correlation": 0.062174013359423366,
+            "peak_margin": 0.847850885257976,
+            "fit_snr_db": 7.057776424051144,
+            "gain": 0.9750189468272488,
+            "polarity": 1,
+            "input_rms_dbfs": -49.47038756112327,
+            "search_boundary_peak": false,
+            "window": 2,
+            "channel": 1,
+            "input_host_start_seconds": 32213.25389270833,
+            "latency_ms": 14.766602667639738,
+            "latency_frames_at_nominal_rate": 708.7969280467074,
+            "matched_output_host_start_seconds": 32213.268659310997,
+            "callback_entry_difference_ms": {
+              "mean": 11.089558943831687,
+              "min": 10.513875000469852,
+              "max": 11.894833332917187
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.8962026441506494,
+            "second_peak_correlation": 0.0435318135702593,
+            "peak_margin": 0.8526708305803902,
+            "fit_snr_db": 6.251913139459109,
+            "gain": 0.9663106228758575,
+            "polarity": 1,
+            "input_rms_dbfs": -50.00924023800693,
+            "search_boundary_peak": false,
+            "window": 2,
+            "channel": 2,
+            "input_host_start_seconds": 32213.25389270833,
+            "latency_ms": 14.766581419476887,
+            "latency_frames_at_nominal_rate": 708.7959081348906,
+            "matched_output_host_start_seconds": 32213.268659289748,
+            "callback_entry_difference_ms": {
+              "mean": 11.089558943831687,
+              "min": 10.513875000469852,
+              "max": 11.894833332917187
+            }
+          },
+          {
+            "status": "rejected",
+            "reason": "weak correlation (unrelated audio, noise, or FX transformation); poor delayed-signal fit",
+            "correlation": 0.5616623491082045,
+            "second_peak_correlation": 0.03626240279903462,
+            "peak_margin": 0.5253999463091699,
+            "fit_snr_db": -3.277177752275256,
+            "gain": 0.9668358574237839,
+            "polarity": 1,
+            "input_rms_dbfs": -49.64741109603334,
+            "search_boundary_peak": false,
+            "window": 3,
+            "channel": 1,
+            "input_host_start_seconds": 32213.553892708333,
+            "latency_ms": 14.763219944331961,
+            "latency_frames_at_nominal_rate": 708.6345573279341,
+            "matched_output_host_start_seconds": 32213.568655928277,
+            "callback_entry_difference_ms": {
+              "mean": 11.091800347268316,
+              "min": 10.519041665247642,
+              "max": 11.89570833594189
+            }
+          },
+          {
+            "status": "rejected",
+            "reason": "weak correlation (unrelated audio, noise, or FX transformation); poor delayed-signal fit",
+            "correlation": 0.5320810150469404,
+            "second_peak_correlation": 0.03817971255368416,
+            "peak_margin": 0.49390130249325626,
+            "fit_snr_db": -4.034239367601776,
+            "gain": 0.9626696277282445,
+            "polarity": 1,
+            "input_rms_dbfs": -49.96125876737519,
+            "search_boundary_peak": false,
+            "window": 3,
+            "channel": 2,
+            "input_host_start_seconds": 32213.553892708333,
+            "latency_ms": 14.76282536578001,
+            "latency_frames_at_nominal_rate": 708.6156175574405,
+            "matched_output_host_start_seconds": 32213.568655533698,
+            "callback_entry_difference_ms": {
+              "mean": 11.091800347268316,
+              "min": 10.519041665247642,
+              "max": 11.89570833594189
+            }
+          },
+          {
+            "status": "rejected",
+            "reason": "weak correlation (unrelated audio, noise, or FX transformation); poor delayed-signal fit",
+            "correlation": 0.5790998552873994,
+            "second_peak_correlation": 0.05524697895425953,
+            "peak_margin": 0.5238528763331398,
+            "fit_snr_db": -2.7581141256726722,
+            "gain": 0.9476743870137189,
+            "polarity": 1,
+            "input_rms_dbfs": -49.752383469203394,
+            "search_boundary_peak": false,
+            "window": 4,
+            "channel": 1,
+            "input_host_start_seconds": 32213.853892708332,
+            "latency_ms": 14.75920026722983,
+            "latency_frames_at_nominal_rate": 708.4416128270318,
+            "matched_output_host_start_seconds": 32213.8686519086,
+            "callback_entry_difference_ms": {
+              "mean": 11.091288721043687,
+              "min": 10.515124999074033,
+              "max": 11.894125000253553
+            }
+          },
+          {
+            "status": "rejected",
+            "reason": "weak correlation (unrelated audio, noise, or FX transformation); poor delayed-signal fit",
+            "correlation": 0.5530169831372684,
+            "second_peak_correlation": 0.04870554480471707,
+            "peak_margin": 0.5043114383325513,
+            "fit_snr_db": -3.3956043561783256,
+            "gain": 0.967641109543353,
+            "polarity": 1,
+            "input_rms_dbfs": -49.996398157983215,
+            "search_boundary_peak": false,
+            "window": 4,
+            "channel": 2,
+            "input_host_start_seconds": 32213.853892708332,
+            "latency_ms": 14.75957382873827,
+            "latency_frames_at_nominal_rate": 708.459543779437,
+            "matched_output_host_start_seconds": 32213.86865228216,
+            "callback_entry_difference_ms": {
+              "mean": 11.091288721043687,
+              "min": 10.515124999074033,
+              "max": 11.894125000253553
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9124379429678452,
+            "second_peak_correlation": 0.05144668922157913,
+            "peak_margin": 0.8609912537462661,
+            "fit_snr_db": 8.194963798498453,
+            "gain": 0.9594268264817334,
+            "polarity": 1,
+            "input_rms_dbfs": -49.71039578428897,
+            "search_boundary_peak": false,
+            "window": 5,
+            "channel": 1,
+            "input_host_start_seconds": 32214.15389270833,
+            "latency_ms": 14.75545701317313,
+            "latency_frames_at_nominal_rate": 708.2619366323103,
+            "matched_output_host_start_seconds": 32214.168648165345,
+            "callback_entry_difference_ms": {
+              "mean": 11.092052803650555,
+              "min": 10.50908333127154,
+              "max": 11.896791667822981
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9599602081202564,
+            "second_peak_correlation": 0.06781384588857829,
+            "peak_margin": 0.8921463622316781,
+            "fit_snr_db": 12.561492067058754,
+            "gain": 0.966215997803668,
+            "polarity": 1,
+            "input_rms_dbfs": -49.9736251015198,
+            "search_boundary_peak": false,
+            "window": 5,
+            "channel": 2,
+            "input_host_start_seconds": 32214.15389270833,
+            "latency_ms": 14.755440783455077,
+            "latency_frames_at_nominal_rate": 708.2611576058437,
+            "matched_output_host_start_seconds": 32214.168648149116,
+            "callback_entry_difference_ms": {
+              "mean": 11.092052803650555,
+              "min": 10.50908333127154,
+              "max": 11.896791667822981
+            }
+          },
+          {
+            "status": "rejected",
+            "reason": "weak correlation (unrelated audio, noise, or FX transformation); poor delayed-signal fit",
+            "correlation": 0.5591399284550761,
+            "second_peak_correlation": 0.03562757826756404,
+            "peak_margin": 0.5235123501875121,
+            "fit_snr_db": -3.496566716426366,
+            "gain": 0.9953536688967102,
+            "polarity": 1,
+            "input_rms_dbfs": -49.78200637570929,
+            "search_boundary_peak": false,
+            "window": 6,
+            "channel": 1,
+            "input_host_start_seconds": 32214.45389270833,
+            "latency_ms": 14.752142738200597,
+            "latency_frames_at_nominal_rate": 708.1028514336286,
+            "matched_output_host_start_seconds": 32214.46864485107,
+            "callback_entry_difference_ms": {
+              "mean": 11.091871117013296,
+              "min": 10.516791666304925,
+              "max": 11.894875002326444
+            }
+          },
+          {
+            "status": "rejected",
+            "reason": "weak correlation (unrelated audio, noise, or FX transformation); poor delayed-signal fit",
+            "correlation": 0.5202424631124742,
+            "second_peak_correlation": 0.031396802842055635,
+            "peak_margin": 0.4888456602704186,
+            "fit_snr_db": -4.412483573350016,
+            "gain": 0.9783725104312073,
+            "polarity": 1,
+            "input_rms_dbfs": -49.963984609398636,
+            "search_boundary_peak": false,
+            "window": 6,
+            "channel": 2,
+            "input_host_start_seconds": 32214.45389270833,
+            "latency_ms": 14.752731796467904,
+            "latency_frames_at_nominal_rate": 708.1311262304594,
+            "matched_output_host_start_seconds": 32214.468645440127,
+            "callback_entry_difference_ms": {
+              "mean": 11.091871117013296,
+              "min": 10.516791666304925,
+              "max": 11.894875002326444
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9400260010878732,
+            "second_peak_correlation": 0.047456187816009694,
+            "peak_margin": 0.8925698132718635,
+            "fit_snr_db": 8.92572195575871,
+            "gain": 0.9862326410981025,
+            "polarity": 1,
+            "input_rms_dbfs": -49.676801680270124,
+            "search_boundary_peak": false,
+            "window": 7,
+            "channel": 1,
+            "input_host_start_seconds": 32214.75389270833,
+            "latency_ms": 14.748638691507697,
+            "latency_frames_at_nominal_rate": 707.9346571923694,
+            "matched_output_host_start_seconds": 32214.768641347022,
+            "callback_entry_difference_ms": {
+              "mean": 11.093330665519009,
+              "min": 10.510500000236789,
+              "max": 11.906916664884193
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9503423403428147,
+            "second_peak_correlation": 0.05618848115090259,
+            "peak_margin": 0.8941538591919121,
+            "fit_snr_db": 9.730876270685211,
+            "gain": 0.9864810128606041,
+            "polarity": 1,
+            "input_rms_dbfs": -50.100981293941025,
+            "search_boundary_peak": false,
+            "window": 7,
+            "channel": 2,
+            "input_host_start_seconds": 32214.75389270833,
+            "latency_ms": 14.748878526745285,
+            "latency_frames_at_nominal_rate": 707.9461692837737,
+            "matched_output_host_start_seconds": 32214.768641586856,
+            "callback_entry_difference_ms": {
+              "mean": 11.093330665519009,
+              "min": 10.510500000236789,
+              "max": 11.906916664884193
+            }
+          },
+          {
+            "status": "rejected",
+            "reason": "weak correlation (unrelated audio, noise, or FX transformation); poor delayed-signal fit",
+            "correlation": 0.5924815115248027,
+            "second_peak_correlation": 0.042978315089839125,
+            "peak_margin": 0.5495031964349635,
+            "fit_snr_db": -2.7387385521444036,
+            "gain": 0.9630019209634119,
+            "polarity": 1,
+            "input_rms_dbfs": -49.72079577738132,
+            "search_boundary_peak": false,
+            "window": 8,
+            "channel": 1,
+            "input_host_start_seconds": 32215.053892708333,
+            "latency_ms": 14.745283450364816,
+            "latency_frames_at_nominal_rate": 707.7736056175112,
+            "matched_output_host_start_seconds": 32215.068637991782,
+            "callback_entry_difference_ms": {
+              "mean": 11.070928217639752,
+              "min": 10.51391666624113,
+              "max": 11.894666666194098
+            }
+          },
+          {
+            "status": "rejected",
+            "reason": "weak correlation (unrelated audio, noise, or FX transformation); poor delayed-signal fit",
+            "correlation": 0.5472056965304049,
+            "second_peak_correlation": 0.03836742028574899,
+            "peak_margin": 0.5088382762446558,
+            "fit_snr_db": -3.777311985433646,
+            "gain": 0.9825491976132192,
+            "polarity": 1,
+            "input_rms_dbfs": -50.17337179806514,
+            "search_boundary_peak": false,
+            "window": 8,
+            "channel": 2,
+            "input_host_start_seconds": 32215.053892708333,
+            "latency_ms": 14.745807729026875,
+            "latency_frames_at_nominal_rate": 707.79877099329,
+            "matched_output_host_start_seconds": 32215.068638516062,
+            "callback_entry_difference_ms": {
+              "mean": 11.070928217639752,
+              "min": 10.51391666624113,
+              "max": 11.894666666194098
+            }
+          },
+          {
+            "status": "rejected",
+            "reason": "weak correlation (unrelated audio, noise, or FX transformation); poor delayed-signal fit",
+            "correlation": 0.5584596132614087,
+            "second_peak_correlation": 0.036141032817842665,
+            "peak_margin": 0.522318580443566,
+            "fit_snr_db": -3.4423838807649094,
+            "gain": 0.9653310139378094,
+            "polarity": 1,
+            "input_rms_dbfs": -49.74395451532865,
+            "search_boundary_peak": false,
+            "window": 9,
+            "channel": 1,
+            "input_host_start_seconds": 32215.353892708332,
+            "latency_ms": 14.742393552773617,
+            "latency_frames_at_nominal_rate": 707.6348905331336,
+            "matched_output_host_start_seconds": 32215.368635101884,
+            "callback_entry_difference_ms": {
+              "mean": 11.071071579954655,
+              "min": 10.515416666748933,
+              "max": 11.904208335181465
+            }
+          },
+          {
+            "status": "rejected",
+            "reason": "weak correlation (unrelated audio, noise, or FX transformation); poor delayed-signal fit",
+            "correlation": 0.5239326588103256,
+            "second_peak_correlation": 0.03274236136458965,
+            "peak_margin": 0.49119029744573595,
+            "fit_snr_db": -4.282074568452253,
+            "gain": 0.96038105178213,
+            "polarity": 1,
+            "input_rms_dbfs": -49.92188264939287,
+            "search_boundary_peak": false,
+            "window": 9,
+            "channel": 2,
+            "input_host_start_seconds": 32215.353892708332,
+            "latency_ms": 14.742814060936883,
+            "latency_frames_at_nominal_rate": 707.6550749249704,
+            "matched_output_host_start_seconds": 32215.368635522394,
+            "callback_entry_difference_ms": {
+              "mean": 11.071071579954655,
+              "min": 10.515416666748933,
+              "max": 11.904208335181465
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9406307354298593,
+            "second_peak_correlation": 0.05933461842773165,
+            "peak_margin": 0.8812961170021276,
+            "fit_snr_db": 12.653986295484493,
+            "gain": 0.9620847822883826,
+            "polarity": 1,
+            "input_rms_dbfs": -49.70502322105625,
+            "search_boundary_peak": false,
+            "window": 10,
+            "channel": 1,
+            "input_host_start_seconds": 32215.65389270833,
+            "latency_ms": 14.739806437707545,
+            "latency_frames_at_nominal_rate": 707.5107090099622,
+            "matched_output_host_start_seconds": 32215.668632514768,
+            "callback_entry_difference_ms": {
+              "mean": 11.071829748287504,
+              "min": 10.508958333957708,
+              "max": 11.893625000084285
+            }
+          },
+          {
+            "status": "accepted",
+            "reason": null,
+            "correlation": 0.9385658296833453,
+            "second_peak_correlation": 0.04560661162041498,
+            "peak_margin": 0.8929592180629303,
+            "fit_snr_db": 12.077463560233827,
+            "gain": 0.9628006712289836,
+            "polarity": 1,
+            "input_rms_dbfs": -50.075998722905055,
+            "search_boundary_peak": false,
+            "window": 10,
+            "channel": 2,
+            "input_host_start_seconds": 32215.65389270833,
+            "latency_ms": 14.739880324383202,
+            "latency_frames_at_nominal_rate": 707.5142555703937,
+            "matched_output_host_start_seconds": 32215.668632588655,
+            "callback_entry_difference_ms": {
+              "mean": 11.071829748287504,
+              "min": 10.508958333957708,
+              "max": 11.893625000084285
+            }
+          },
+          {
+            "status": "rejected",
+            "reason": "weak correlation (unrelated audio, noise, or FX transformation); poor delayed-signal fit",
+            "correlation": 0.5903455046109128,
+            "second_peak_correlation": 0.03254701316439395,
+            "peak_margin": 0.5577984914465189,
+            "fit_snr_db": -2.6893256330671473,
+            "gain": 0.9639165904619964,
+            "polarity": 1,
+            "input_rms_dbfs": -49.709379227335674,
+            "search_boundary_peak": false,
+            "window": 11,
+            "channel": 1,
+            "input_host_start_seconds": 32215.95389270833,
+            "latency_ms": 14.737091892647001,
+            "latency_frames_at_nominal_rate": 707.380410847056,
+            "matched_output_host_start_seconds": 32215.968629800223,
+            "callback_entry_difference_ms": {
+              "mean": 11.072232450751471,
+              "min": 10.515958336327458,
+              "max": 11.898500000825152
+            }
+          },
+          {
+            "status": "rejected",
+            "reason": "weak correlation (unrelated audio, noise, or FX transformation); poor delayed-signal fit",
+            "correlation": 0.5543945449218032,
+            "second_peak_correlation": 0.03321969669941116,
+            "peak_margin": 0.521174848222392,
+            "fit_snr_db": -3.5460651267526715,
+            "gain": 0.9632141210439412,
+            "polarity": 1,
+            "input_rms_dbfs": -49.93769321887871,
+            "search_boundary_peak": false,
+            "window": 11,
+            "channel": 2,
+            "input_host_start_seconds": 32215.95389270833,
+            "latency_ms": 14.737036845342033,
+            "latency_frames_at_nominal_rate": 707.3777685764176,
+            "matched_output_host_start_seconds": 32215.968629745177,
+            "callback_entry_difference_ms": {
+              "mean": 11.072232450751471,
+              "min": 10.515958336327458,
+              "max": 11.898500000825152
+            }
+          }
+        ],
+        "channel_median_skew_ms": 1.6229718053040187e-05
+      }
+    ]
+  },
+  "injector": {
+    "audioStarted": true,
+    "cleanup": {
+      "confirmed": true,
+      "disposeStatus": 0
+    },
+    "deviceBufferFramesAfter": 512,
+    "deviceBufferFramesBefore": 512,
+    "deviceBufferWritten": false,
+    "deviceName": "Fireface UCX II (24100500)",
+    "deviceRateWritten": false,
+    "deviceUID": "RMEUSBDevice-130-24100500",
+    "elapsedSeconds": 14.325084458334459,
+    "frames": 672000,
+    "gainDB": 0,
+    "outputHostChannels": [
+      1,
+      2
+    ],
+    "peak": 0.015838623046875,
+    "peakLimitDBFS": -24,
+    "sampleRate": 48000,
+    "signalSeconds": 14,
+    "startedAt": "2026-09-28T11:51:10Z",
+    "success": true,
+    "systemDefaultOutputChanged": false,
+    "tool": "latency-signal-injector",
+    "validateOnly": false,
+    "wav": "/Users/seijiro/Sync/sync_work/by-llms/my-redirector/.build/latency-measurement/signal-36.wav"
+  }
+}

@@ -127,7 +127,7 @@ enum MutedRouteCheck {
     }
 
     @MainActor
-    private static func microphonePermission(timeout: Double) -> (allowed: Bool, report: [String: Any], error: String?) {
+    static func microphonePermission(timeout: Double) -> (allowed: Bool, report: [String: Any], error: String?) {
         let initial = AVCaptureDevice.authorizationStatus(for: .audio)
         let started = ProcessInfo.processInfo.systemUptime
         var record: [String: Any] = ["initialStatus": permissionName(initial), "timeoutSeconds": timeout, "requested": false]

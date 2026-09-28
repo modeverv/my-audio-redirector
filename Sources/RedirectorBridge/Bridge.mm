@@ -242,6 +242,30 @@ struct TimestampTrace {
     int32_t inputFrames = 0, outputFrames = 0;
     bool inputTimePresent = false, outputTimePresent = false, armed = false, stopping = false;
 };
+struct LatencyBlock {
+    double sampleTime=0, hostSeconds=0, arrivalSeconds=0;
+    uint32_t frames=0, offset=0, timeFlags=0;
+};
+struct LatencyStream {
+    std::vector<float> samples;
+    std::vector<LatencyBlock> blocks;
+    // One IOProc owns each stream. The control queue only reads after HAL stops.
+    uint32_t frameCount=0, blockCount=0;
+    bool full=false;
+};
+struct LatencyCapture {
+    std::atomic<bool> armed{false};
+    bool armRequested=false;
+    std::array<LatencyStream,4> streams;
+    explicit LatencyCapture(double seconds) {
+        auto frames=uint32_t(std::ceil(seconds*kRate));
+        for(auto &stream:streams) {
+            stream.samples.resize(size_t(frames)*2);
+            // Even a one-frame callback cannot exhaust block storage first.
+            stream.blocks.resize(frames);
+        }
+    }
+};
 struct IOContext {
     MREngine *engine = nullptr; int role = 0; AudioObjectID device = 0; AudioDeviceIOProcID io = nullptr; bool started = false;
     uint32_t inputChannels = 0, outputChannels = 0, left = 0, right = 1;
@@ -259,6 +283,7 @@ struct MREngine {
     AudioObjectID tap = 0, aggregate = 0; std::string tapUID, aggregateUID; AudioStreamBasicDescription tapFormat{};
     uint32_t tapChannels = 0, tapBuffer = 0;
     IOContext io[3]; std::vector<Listener> listeners;
+    std::unique_ptr<LatencyCapture> latency;
     std::shared_ptr<ListenerSignals> signals=std::make_shared<ListenerSignals>();
     dispatch_queue_t notificationQueue=dispatch_queue_create("my-redirector.audio-notifications",dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL,QOS_CLASS_USER_INTERACTIVE,0));
     std::atomic<bool> stopping{true}, captureArmed{false}; std::atomic<uint32_t> inFlight{0};
@@ -274,6 +299,22 @@ MRTime timeAt(MREngine *e, const AudioTimeStamp *ts) {
     if (!ts) return {0,0,0};
     bool valid = (ts->mFlags & kAudioTimeStampSampleTimeValid) && (ts->mFlags & kAudioTimeStampHostTimeValid);
     return {ts->mSampleTime, double(ts->mHostTime)*e->hostScale, valid ? 1 : 0};
+}
+void captureLatency(MREngine *e,uint32_t streamIndex,MRChannelView left,MRChannelView right,
+                    uint32_t frames,const AudioTimeStamp *timestamp,uint64_t arrival) {
+    auto *capture=e->latency.get();
+    if(!capture || !capture->armed.load(std::memory_order_acquire))return;
+    auto &stream=capture->streams[streamIndex];
+    if(size_t(stream.frameCount+frames)*2>stream.samples.size() || stream.blockCount>=stream.blocks.size()) { stream.full=true;return; }
+    auto &block=stream.blocks[stream.blockCount++];
+    block={};
+    block.frames=frames;block.offset=stream.frameCount;block.arrivalSeconds=double(arrival)*e->hostScale;
+    if(timestamp){block.sampleTime=timestamp->mSampleTime;block.hostSeconds=double(timestamp->mHostTime)*e->hostScale;block.timeFlags=timestamp->mFlags;}
+    for(uint32_t f=0;f<frames;++f) {
+        stream.samples[2*(stream.frameCount+f)]=left.data[size_t(f)*left.stride];
+        stream.samples[2*(stream.frameCount+f)+1]=right.data[size_t(f)*right.stride];
+    }
+    stream.frameCount+=frames;
 }
 // Diagnostic estimate only: -1 denotes malformed or unequal buffer lengths, 0 no frames.
 int32_t traceFrameCount(const AudioBufferList *abl) {
@@ -372,8 +413,12 @@ OSStatus callback(AudioObjectID, const AudioTimeStamp *, const AudioBufferList *
     if(io->role==0) mr_core_push(e->core,0,views,io->inputChannels,frames,timeAt(e,inputTime));
     else if(io->role==1) {
         MRChannelView selected[2]={views[e->config.d4Left-1],views[e->config.d4Right-1]};
+        captureLatency(e,2,selected[0],selected[1],frames,inputTime,arrival);
         mr_core_push(e->core,2,selected,2,frames,timeAt(e,inputTime));
-    } else mr_core_push(e->core,1,views,io->inputChannels,frames,timeAt(e,inputTime));
+    } else {
+        if(io->inputChannels>=2)captureLatency(e,0,views[0],views[1],frames,inputTime,arrival);
+        mr_core_push(e->core,1,views,io->inputChannels,frames,timeAt(e,inputTime));
+    }
     if(io->role==2) return noErr;
     float *left=nullptr,*right=nullptr; uint32_t ls=0,rs=0,outputFrames=0;
     if(!outputViews(output,io->outputChannels,io->left,io->right,left,right,ls,rs,outputFrames)) { fault(e,3); return noErr; }
@@ -381,6 +426,7 @@ OSStatus callback(AudioObjectID, const AudioTimeStamp *, const AudioBufferList *
     mr_core_render(e->core,io->role==0 ? 1 : 0,io->stereo.data(),outputFrames,timeAt(e,outputTime));
     if(e->signals->rtFault.load(std::memory_order_relaxed) || e->stopping.load(std::memory_order_acquire) || !e->captureArmed.load(std::memory_order_acquire)) return noErr;
     for(uint32_t f=0;f<outputFrames;++f) { left[size_t(f)*ls]=io->stereo[2*f]; right[size_t(f)*rs]=io->stereo[2*f+1]; }
+    captureLatency(e,io->role==0?3:1,{left,ls},{right,rs},outputFrames,outputTime,arrival);
     io->completedOutputFrames.fetch_add(outputFrames,std::memory_order_release);
     return noErr;
 }
@@ -545,6 +591,7 @@ bool teardownFailed(MREngine *e,const std::string &message) {
     return false;
 }
 bool stop(MREngine *e) {
+    if(e->latency)e->latency->armed.store(false,std::memory_order_release);
     e->captureArmed.store(false,std::memory_order_release);e->stopping.store(true,std::memory_order_release);bool safe=true;
     for(auto &io:e->io){
         if(io.io){
@@ -576,6 +623,7 @@ void reset(MREngine *e) {
     e->rme={};e->d4={};e->pc={};e->tapUID.clear();e->aggregateUID.clear();e->tapFormat={};e->tapChannels=e->tapBuffer=0;e->error.clear();e->teardownDiagnostic.clear();
     e->captureArmed.store(false,std::memory_order_release);e->probeNonFinite.store(0);e->lastStats={};
     for(auto &v:e->probePeaks)v.store(0);
+    if(e->latency){e->latency->armRequested=false;for(auto &stream:e->latency->streams){stream.frameCount=stream.blockCount=0;stream.full=false;}}
     for(auto &io:e->io){io.device=0;io.inputChannels=io.outputChannels=0;io.left=0;io.right=1;io.callbacks.store(0);io.frames.store(0);io.heartbeat.store(0);io.completedOutputFrames.store(0);io.timestampTraceCount.store(0);io.timestampTrace={};io.previousArmedArrival=0;io.armedCallbacks.store(0);io.maxCallbackIntervalTicks.store(0);io.maxProcessingTicks.store(0);io.minInputFrames.store(UINT32_MAX);io.maxInputFrames.store(0);io.minOutputFrames.store(UINT32_MAX);io.maxOutputFrames.store(0);}
 }
 bool begin(MREngine *e,const char *json,bool probe,std::string &error) {
@@ -709,6 +757,36 @@ extern "C" char *mr_inventory_json(void){@autoreleasepool{NSMutableArray *device
 extern "C" void mr_string_free(char *p){free(p);}
 extern "C" int mr_validate_config_json(const char *json,char *error,size_t size){@autoreleasepool{Config config;std::string why;bool ok=false;try{ok=parse(json,config,false,why);}catch(const std::exception &x){why=x.what();}catch(...){why="Unexpected configuration validation error";}errorOut(error,size,why);return ok?0:1;}}
 extern "C" MREngine *mr_engine_create(void){try{return new MREngine;}catch(...){return nullptr;}}
+extern "C" int mr_engine_prepare_latency_capture(MREngine *e,double seconds) {
+    if(!e || e->active || e->unsafeTeardown || e->inFlight.load() || !std::isfinite(seconds) || seconds<1 || seconds>12)return 1;
+    try {e->latency=std::make_unique<LatencyCapture>(seconds);return 0;}catch(...){return 1;}
+}
+extern "C" int mr_engine_arm_latency_capture(MREngine *e) {
+    if(!e || !e->active || e->probe || !e->latency || e->latency->armRequested || !e->core)return 1;
+    MRCoreStats stats{};mr_core_snapshot(e->core,&stats);
+    if(stats.fault || stats.primedMask!=7 || e->signals->rtFault.load())return 1;
+    e->latency->armRequested=true;e->latency->armed.store(true,std::memory_order_release);return 0;
+}
+extern "C" void mr_engine_disarm_latency_capture(MREngine *e) {
+    if(e && e->latency)e->latency->armed.store(false,std::memory_order_release);
+}
+extern "C" char *mr_engine_latency_capture_json(MREngine *e) {
+    if(!e || !e->latency || e->active || e->unsafeTeardown || e->inFlight.load())return nullptr;
+    @autoreleasepool {
+        NSMutableArray *streams=[NSMutableArray array];
+        NSString *names[]={@"pc_tap",@"d4_output",@"d4_return",@"rme_output"};
+        for(uint32_t i=0;i<4;++i) {
+            const auto &stream=e->latency->streams[i];NSMutableArray *blocks=[NSMutableArray arrayWithCapacity:stream.blockCount];
+            for(uint32_t n=0;n<stream.blockCount;++n) {
+                const auto &b=stream.blocks[n];NSMutableArray *samples=[NSMutableArray arrayWithCapacity:b.frames*2];
+                for(uint32_t f=0;f<b.frames*2;++f){float value=stream.samples[size_t(b.offset)*2+f];[samples addObject:std::isfinite(value)?(id)@(value):NSNull.null];}
+                [blocks addObject:@{@"sampleTime":std::isfinite(b.sampleTime)?(id)@(b.sampleTime):NSNull.null,@"hostSeconds":@(b.hostSeconds),@"arrivalSeconds":@(b.arrivalSeconds),@"frames":@(b.frames),@"timeFlags":@(b.timeFlags),@"samples":samples}];
+            }
+            [streams addObject:@{@"name":names[i],@"channels":@2,@"frames":@(stream.frameCount),@"capacityExceeded":@(stream.full),@"blocks":blocks}];
+        }
+        return jsonString(@{@"sampleRate":@(kRate),@"streams":streams,@"boundary":@"HAL buffer frame host timestamps; not physical ADC/DAC measurement",@"armed":@(e->latency->armRequested)});
+    }
+}
 extern "C" void mr_engine_destroy(MREngine *e){if(!e)return;@autoreleasepool{fadeBeforeStop(e);if(stop(e))delete e;}}
 extern "C" int mr_engine_start(MREngine *e,const char *json,char *error,size_t size){if(!e){errorOut(error,size,"Engine is null");return 1;}@autoreleasepool{std::string why;bool ok=false;try{ok=begin(e,json,false,why);}catch(const std::exception &x){why=x.what();}catch(...){why="Unexpected engine setup error";}if(!ok){e->error=why;stop(e);e->state="fault";errorOut(error,size,e->error);return 1;}errorOut(error,size,"");return 0;}}
 extern "C" int mr_engine_probe_start(MREngine *e,const char *json,char *error,size_t size){if(!e){errorOut(error,size,"Engine is null");return 1;}@autoreleasepool{std::string why;bool ok=false;try{ok=begin(e,json,true,why);}catch(const std::exception &x){why=x.what();}catch(...){why="Unexpected Tap setup error";}if(!ok){e->error=why;stop(e);e->state="fault";errorOut(error,size,e->error);return 1;}errorOut(error,size,"");return 0;}}

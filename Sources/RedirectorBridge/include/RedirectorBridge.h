@@ -33,6 +33,13 @@ typedef struct {
 void mr_engine_copy_meters(MREngine *, MRMeterLevels *);
 // Poll on control queue; performs device/heartbeat checks and stops on fault.
 char *mr_engine_status_json(MREngine *);
+// Opt-in, bounded diagnostic PCM capture. Prepare while stopped; arm once after
+// priming. Callback storage is preallocated. Export only after a successful stop.
+// Captures PC 1/2, D4 Computer 1/2, selected D4 return, selected RME output.
+int mr_engine_prepare_latency_capture(MREngine *, double capacitySeconds);
+int mr_engine_arm_latency_capture(MREngine *);
+void mr_engine_disarm_latency_capture(MREngine *);
+char *mr_engine_latency_capture_json(MREngine *);
 // Capture-only PoC: start tap without opening physical devices or writing output. Config same PC fields.
 int mr_engine_probe_start(MREngine *, const char *configJSON, char *error, size_t errorSize);
 #ifdef __cplusplus
