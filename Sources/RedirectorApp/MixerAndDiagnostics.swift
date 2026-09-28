@@ -13,58 +13,153 @@ private struct PeakMeter: View {
     }
 }
 
+private enum MixerRow: Identifiable {
+    case sourceHeader(Int)
+    case emptySource(Int)
+    case channel(source: Int, value: ChannelConfiguration)
+    case master
+    case returned
+    case explanation
+
+    var id: String {
+        switch self {
+        case .sourceHeader(let source): return "source-\(source)-header"
+        case .emptySource(let source): return "source-\(source)-empty"
+        case .channel(let source, let channel): return "source-\(source)-channel-\(channel.channel)"
+        case .master: return "master"
+        case .returned: return "return"
+        case .explanation: return "explanation"
+        }
+    }
+}
+
 struct MixerSettings: View {
     @ObservedObject var model: RedirectorModel
+
+    private var rows: [MixerRow] {
+        var result: [MixerRow] = []
+        for source in 0...1 {
+            result.append(.sourceHeader(source))
+            let channels = model.channels(source: source)
+            if channels.isEmpty { result.append(.emptySource(source)) }
+            result.append(contentsOf: channels.map { .channel(source: source, value: $0) })
+        }
+        result.append(contentsOf: [.master, .returned, .explanation])
+        return result
+    }
+
     var body: some View {
         ScrollView {
-            // Keep channel rows as direct lazy children. A GroupBox around an
-            // eager VStack forces every slider row through ideal-size fitting
-            // when the tab is selected, even while most rows are offscreen.
+            // A single flat collection gives every lazy child a unique identity,
+            // including when both sources have the same channel numbers/device.
+            // Fixed channel dimensions avoid eager fitting of all slider rows.
             LazyVStack(alignment: .leading, spacing: 6) {
-                channelGroup("RME INPUT", source: 0)
-                channelGroup("PC OUTPUT", source: 1)
-                GroupBox("2MIX → Discrete4 Computer Play 1/2") {
-                    HStack {
-                        Text("Master").frame(width: 150, alignment: .leading)
-                        Slider(value: Binding(get: { Double(model.configuration.forwardGainDB) }, set: { model.changeMaster(forward: Float($0)) }), in: -90...12, step: 0.1)
-                        Text(String(format: "%.1f dB", model.configuration.forwardGainDB)).monospacedDigit().frame(width: 76)
-                        PeakMeter(peak: model.settingsVisible ? model.status.outputPeaks.max() : nil)
-                    }.padding(8)
-                }
-                GroupBox("RETURN → 選択した RME 出力") {
-                    HStack {
-                        Text("Return").frame(width: 150, alignment: .leading)
-                        Slider(value: Binding(get: { Double(model.configuration.returnGainDB) }, set: { model.changeMaster(returned: Float($0)) }), in: -90...12, step: 0.1)
-                        Text(String(format: "%.1f dB", model.configuration.returnGainDB)).monospacedDigit().frame(width: 76)
-                        Toggle("Mute", isOn: Binding(get: { model.configuration.returnMuted }, set: { model.changeMaster(muted: $0) })).toggleStyle(.checkbox)
-                    }.padding(8)
-                }
-                Text("各入力と復路は初期状態で Mute です。Stereo Link は隣り合う L/R の gain と mute を連動し、左右の pan は保持します。")
-                    .font(.caption).foregroundStyle(.secondary)
+                ForEach(rows) { row in mixerRow(row) }
             }.padding()
         }.disabled(model.isProbing || model.storageBlocked)
     }
 
-    private func channelGroup(_ title: String, source: Int) -> some View {
-        Section {
-            if model.channels(source: source).isEmpty {
-                Text("入出力タブで取得元を選択してください。")
-                    .foregroundStyle(.secondary).frame(maxWidth: .infinity, alignment: .leading).padding()
-            }
-            ForEach(model.channels(source: source)) { channel in
-                channelRow(channel, source: source)
-                    .padding(.horizontal, 8)
-                    .frame(height: 32)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .overlay(alignment: .bottom) {
-                        if channel.channel.isMultiple(of: 2) { Divider() }
-                    }
-            }
-        } header: {
-            Text(title).font(.headline)
+    @ViewBuilder
+    private func mixerRow(_ row: MixerRow) -> some View {
+        switch row {
+        case .sourceHeader(let source):
+            sourceHeader(source)
+        case .emptySource:
+            Text("入出力タブで取得元を選択してください。")
+                .foregroundStyle(.secondary).frame(maxWidth: .infinity, alignment: .leading).padding()
+        case .channel(let source, let channel):
+            channelRow(channel, source: source)
+                .padding(.horizontal, 8)
+                .frame(height: 40)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(8)
-                .background(.quaternary, in: RoundedRectangle(cornerRadius: 6))
+                .overlay(alignment: .bottom) {
+                    if channel.channel.isMultiple(of: 2) { Divider() }
+                }
+        case .master:
+            GroupBox("2MIX → Discrete4 Computer Play 1/2") {
+                HStack {
+                    Text("Master").frame(width: 150, alignment: .leading)
+                    Slider(value: Binding(get: { Double(model.configuration.forwardGainDB) }, set: { model.changeMaster(forward: Float($0)) }), in: -90...12, step: 0.1)
+                        .frame(width: 145)
+                    Text(String(format: "%.1f dB", model.configuration.forwardGainDB)).monospacedDigit().frame(width: 76)
+                    PeakMeter(peak: model.settingsVisible ? model.status.outputPeaks.first : nil)
+                }.frame(maxWidth: .infinity, alignment: .leading).frame(height: 36).padding(8)
+            }
+        case .returned:
+            GroupBox("RETURN → 選択した RME 出力") {
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        Text("Return").frame(width: 150, alignment: .leading)
+                        Slider(value: Binding(get: { Double(model.configuration.returnGainDB) }, set: { model.changeMaster(returned: Float($0)) }), in: -90...12, step: 0.1)
+                            .frame(width: 145)
+                        Text(String(format: "%.1f dB", model.configuration.returnGainDB)).monospacedDigit().frame(width: 76)
+                        Toggle("Mute", isOn: Binding(get: { model.configuration.returnMuted }, set: { model.changeMaster(muted: $0) })).toggleStyle(.checkbox)
+                    }.frame(height: 36)
+                    Text("Discrete4 USB \(model.configuration.d4ReturnLeft)/\(model.configuration.d4ReturnRight) → RME host \(model.configuration.rmeReturnLeft)/\(model.configuration.rmeReturnRight)")
+                        .font(.caption).foregroundStyle(.secondary).lineLimit(1).frame(height: 16)
+                    HStack {
+                        Text("USB入力（Mute前）").frame(width: 150, alignment: .leading)
+                        Text("L / ch \(model.configuration.d4ReturnLeft)").frame(width: 60)
+                        PeakMeter(peak: returnInputPeak(0))
+                        Text("R / ch \(model.configuration.d4ReturnRight)").frame(width: 60)
+                        PeakMeter(peak: returnInputPeak(1))
+                    }.font(.caption).frame(height: 22)
+                        .help("選択したDiscrete4 USB入力を取得した直後の値です。ASRC・Return gain・Muteより前のL/Rを表示します。")
+                    HStack {
+                        Text("RME送出（L/R最大）").frame(width: 150, alignment: .leading)
+                        PeakMeter(peak: returnOutputPeak)
+                        Text("ASRC・gain・Mute後").foregroundStyle(.secondary)
+                    }.font(.caption).frame(height: 22)
+                        .help("アプリ側の復路出力バッファのピークです。TotalMixの物理出力へ届いたことを示すメーターではありません。")
+                }.frame(maxWidth: .infinity, alignment: .leading).frame(height: 114).padding(8)
+            }
+        case .explanation:
+            Text("初期状態は全入力・復路が Mute、pan は奇数=L・偶数=Rです。Link は隣り合うペアの gain と Mute を連動します。Pan は各ch独立で、L=左、C=中央、R=右です。保存した Pan を自動で変更することはありません。")
+                .font(.caption).foregroundStyle(.secondary)
+        }
+    }
+
+    private func returnInputPeak(_ index: Int) -> Double? {
+        guard model.settingsVisible,
+              let source = model.status.sources.first(where: { $0.name.caseInsensitiveCompare("Return") == .orderedSame }),
+              source.peaks.indices.contains(index) else { return nil }
+        return source.peaks[index]
+    }
+
+    private var returnOutputPeak: Double? {
+        guard model.settingsVisible, model.status.outputPeaks.indices.contains(1) else { return nil }
+        return model.status.outputPeaks[1]
+    }
+
+    private func sourceHeader(_ source: Int) -> some View {
+        let channels = model.channels(source: source)
+        let deviceName = (source == 0 ? model.rmeDevice?.name : model.pcDevice?.name) ?? "未選択"
+        return VStack(alignment: .leading, spacing: 5) {
+            HStack {
+                Text(source == 0 ? "RME INPUT — 物理入力" : "PC OUTPUT — PC再生出力").font(.headline)
+                Text("\(channels.count) ch").font(.caption).foregroundStyle(.secondary)
+                Spacer()
+                Button("Panを奇数L・偶数Rに戻す") { resetPan(source: source) }
+                    .controlSize(.small)
+                    .disabled(model.structuralLocked || channels.isEmpty)
+                    .help("この取得元の Pan だけを初期配置へ戻します。Gain、Mute、Link は変更しません。OFF中のみ操作できます。")
+            }
+            Text(source == 0
+                 ? "\(deviceName) の入力端子から来る音。PCの再生音は下の PC OUTPUT で調整します。"
+                 : "\(deviceName) / stream \(model.configuration.pcStreamIndex) へアプリ・DAWが送る音。RME INPUTとは別の取得元です。")
+                .font(.caption).foregroundStyle(.secondary).lineLimit(2)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading).padding(8)
+        .background(.quaternary, in: RoundedRectangle(cornerRadius: 6))
+    }
+
+    private func resetPan(source: Int) {
+        guard !model.structuralLocked else { return }
+        for channel in model.channels(source: source) {
+            let defaultPan: Float = channel.channel.isMultiple(of: 2) ? 1 : -1
+            if channel.pan != defaultPan {
+                model.changeChannel(source: source, channel: channel.channel, pan: defaultPan)
+            }
         }
     }
 
@@ -78,19 +173,31 @@ struct MixerSettings: View {
             Text(label).lineLimit(1).help(label)
                 .frame(width: 155, alignment: .leading)
             Slider(value: Binding(get: { Double(channel.gainDB) }, set: { model.changeChannel(source: source, channel: channel.channel, gain: Float($0)) }), in: -90...12, step: 0.1)
-                .frame(width: 145).accessibilityLabel("\(label) gain")
+                .frame(width: 125).accessibilityLabel("\(label) gain")
             Text(String(format: "%.1f", channel.gainDB)).monospacedDigit().frame(width: 43, alignment: .trailing)
             Text("dB").foregroundStyle(.secondary)
             Toggle("Mute", isOn: Binding(get: { channel.muted }, set: { model.changeChannel(source: source, channel: channel.channel, muted: $0) })).toggleStyle(.checkbox)
-            Slider(value: Binding(get: { Double(channel.pan) }, set: { model.changeChannel(source: source, channel: channel.channel, pan: Float($0)) }), in: -1...1, step: 0.01)
-                .frame(width: 68).accessibilityLabel("\(label) pan")
-                .help("Pan: −1 = L、0 = 中央、1 = R")
+            VStack(spacing: 0) {
+                Text("Pan  L · C · R").font(.caption2).foregroundStyle(.secondary)
+                HStack(spacing: 4) {
+                    Slider(value: Binding(get: { Double(channel.pan) }, set: { model.changeChannel(source: source, channel: channel.channel, pan: Float($0)) }), in: -1...1, step: 0.01)
+                        .frame(width: 68).accessibilityLabel("\(label) Pan")
+                        .accessibilityValue(panLabel(channel.pan))
+                    Text(panLabel(channel.pan)).font(.caption2.monospacedDigit()).frame(width: 36, alignment: .trailing)
+                }
+            }.frame(width: 108, height: 34)
+                .help("L = 左、C = 中央、R = 右。数字は左右への振り幅（%）です。")
             if channel.channel == pair && peerExists {
                 Toggle("Link", isOn: Binding(get: { model.linked(source: source, pair: pair) }, set: { model.setLinked(source: source, pair: pair, linked: $0) }))
                     .toggleStyle(.checkbox).frame(width: 55).disabled(model.structuralLocked)
             } else { Color.clear.frame(width: 55, height: 16) }
             PeakMeter(peak: peak)
         }
+    }
+
+    private func panLabel(_ pan: Float) -> String {
+        if abs(pan) < 0.005 { return "C" }
+        return "\(pan < 0 ? "L" : "R") \(Int((abs(pan) * 100).rounded()))"
     }
 
     private func channelLabel(source: Int, channel: Int) -> String {

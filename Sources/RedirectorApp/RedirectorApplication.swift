@@ -6,6 +6,16 @@ final class RedirectorAppDelegate: NSObject, NSApplicationDelegate {
     weak var model: RedirectorModel?
     private var terminating = false
 
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        // Finder reads CFBundleIconFile; explicitly give the running app the
+        // same multi-resolution image so Dock does not retain a generic icon.
+        if let url = Bundle.main.url(forResource: "AppIcon", withExtension: "icns"),
+           let icon = NSImage(contentsOf: url) {
+            NSApp.applicationIconImage = icon
+            NSApp.dockTile.display()
+        }
+    }
+
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
