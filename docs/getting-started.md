@@ -67,6 +67,10 @@ probeは既定で5秒、`--seconds`で0.2〜60秒の取得期間を指定でき�
 
 出力JSONには有効な全mute設定、権限結果、状態の推移、RME／PC／Returnのframe数、prime状態、rateの観測、fault、停止前後と回収結果を記録する。音声データは記録しない。成功には`running`の観測、全producerのframe進行、faultなし、出力peakの無音維持、停止後の`off`・Tap／Aggregateの非稼働・安全なteardown確認が必要。失敗時もJSONと標準エラーの説明を残す。
 
+PC FIFO不足は転送を止めずに再同期するが、この検証CLIは不足/超過のない `lossFree` も成功条件にする。回復があれば指定時間の運転は続け、最終JSONにその回数を残したうえで検証結果は失敗とする。GUIの継続運転と、欠落ゼロの検証合格は別の意味になる。
+
+アプリケーションログは `~/Library/Logs/My Redirector/events.jsonl`。PC不足/復帰の累計と差分を最大1秒ごとにまとめ、終了時にも未記録分を出力する。音声PCMは保存しない。最大2 MiB×現行1本＋過去3本で循環する。診断JSONの `eventLog.error`、`droppedRecords`、`writeFailures` に問題があればログの保存は完全ではないが、その失敗で音声を停止しない。
+
 成功しても、信号内容、channel対応、自己音声除外、FX後復路、物理端子からの実音、実遅延を検証した意味にはならない。これらは全ミュート診断後に別の信号試験で確認する。
 
 ## 48 kHzから44.1 kHzへ戻る場合

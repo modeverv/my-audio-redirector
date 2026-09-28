@@ -366,6 +366,14 @@ enum MutedRouteCheck {
         state.update(["beforeStop": preStop])
         mr_engine_stop(engine)
         let afterStop = readJSON(mr_engine_status_json(engine)) ?? [:]
+        let finalSources = afterStop["sources"] as? [[String: Any]] ?? []
+        let lossFree = finalSources.count == 3 && finalSources.allSatisfy {
+            ($0["underruns"] as? Int ?? 1) == 0 && ($0["overflows"] as? Int ?? 1) == 0
+        }
+        // A PC underrun now keeps the engine alive. Still run the full interval
+        // to observe recovery, but never certify concealed loss as a clean run.
+        if !lossFree { failure = failure ?? "Audio loss was recorded; routing may have recovered, but this was not a loss-free run." }
+        if (afterStop["fault"] as? Int ?? 1) != 0 { failure = failure ?? "Audio fault was recorded during shutdown." }
         let stopped = afterStop["state"] as? String == "off"
         let tapGone = afterStop["tapActive"] as? Bool == false
         let aggregateGone = afterStop["aggregateActive"] as? Bool == false
@@ -387,7 +395,7 @@ enum MutedRouteCheck {
                       "observedPrimedMask": observedPrimedMask, "error": failure as Any? ?? NSNull(),
                       "elapsedControlSeconds": ProcessInfo.processInfo.systemUptime - started,
                       "statusSnapshots": snapshots, "rateReadings": rateReadings, "observedRateChanges": rateChanges,
-                      "outputPeaksRemainedZero": outputSilenceConfirmed, "destroyCallReturned": true])
+                      "outputPeaksRemainedZero": outputSilenceConfirmed, "lossFree": lossFree, "destroyCallReturned": true])
         state.finish(code: success ? 0 : 1)
     }
 

@@ -17,6 +17,7 @@
 #include <memory>
 #include "RedirectorBridge.h"
 #include "RealtimeCore.h"
+#include "EventLog.hpp"
 
 namespace {
 constexpr double kRate = 48000.0;
@@ -284,6 +285,11 @@ struct MREngine {
     uint32_t tapChannels = 0, tapBuffer = 0;
     IOContext io[3]; std::vector<Listener> listeners;
     std::unique_ptr<LatencyCapture> latency;
+    std::shared_ptr<mrlog::EventLog> eventLog;
+    mrlog::RecoveryCounters loggedRecovery;
+    std::string logRunID;
+    uint64_t logStartedHost=0, lastRecoveryLogHost=0;
+    bool logSessionOpen=false;
     std::shared_ptr<ListenerSignals> signals=std::make_shared<ListenerSignals>();
     dispatch_queue_t notificationQueue=dispatch_queue_create("my-redirector.audio-notifications",dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL,QOS_CLASS_USER_INTERACTIVE,0));
     std::atomic<bool> stopping{true}, captureArmed{false}; std::atomic<uint32_t> inFlight{0};
@@ -294,6 +300,47 @@ struct MREngine {
     MREngine() { if(!notificationQueue)throw std::bad_alloc();mach_timebase_info_data_t tb{}; mach_timebase_info(&tb); hostScale = double(tb.numer) / double(tb.denom) / 1.0e9; for (int i=0;i<3;++i) { io[i].engine=this; io[i].role=i; } }
 };
 namespace {
+mrlog::RecoveryCounters recoveryCounters(const MRCoreStats &stats) {
+    return mrlog::RecoveryCounters(stats);
+}
+bool appendEvent(MREngine *e,NSString *kind,NSDictionary *fields) {
+    if(!e->eventLog || !e->logSessionOpen)return false;
+    NSMutableDictionary *record=[fields mutableCopy];
+    record[@"event"]=kind;record[@"runID"]=ns(e->logRunID);record[@"pid"]=@(getpid());
+    record[@"observedAt"]=[NSISO8601DateFormatter stringFromDate:NSDate.date timeZone:[NSTimeZone timeZoneForSecondsFromGMT:0] formatOptions:NSISO8601DateFormatWithInternetDateTime|NSISO8601DateFormatWithFractionalSeconds];
+    record[@"sessionElapsedSeconds"]=@(double(mach_absolute_time()-e->logStartedHost)*e->hostScale);
+    return e->eventLog->append(record);
+}
+void startEventLog(MREngine *e) {
+    e->eventLog=std::make_shared<mrlog::EventLog>(utf8([NSHomeDirectory() stringByAppendingPathComponent:@"Library/Logs/My Redirector"]));
+    e->logRunID=utf8(NSUUID.UUID.UUIDString);e->logStartedHost=mach_absolute_time();
+    e->lastRecoveryLogHost=0;e->loggedRecovery={};e->logSessionOpen=true;
+    appendEvent(e,@"session_start",@{@"probe":@(e->probe),@"requestedBufferFrames":@(e->config.buffer),
+        @"fifoFrames":@[@(e->config.fifo[0]),@(e->config.fifo[1]),@(e->config.fifo[2])],
+        @"sampleRate":@(kRate),@"srcQuality":@(e->config.quality),@"rmeUID":ns(e->config.rmeUID),
+        @"d4UID":ns(e->config.d4UID),@"pcUID":ns(e->config.pcUID),@"pcStreamIndex":@(e->config.pcStream)});
+}
+void logRecovery(MREngine *e,const MRCoreStats &stats,bool force=false) {
+    if(!e->logSessionOpen)return;
+    auto current=recoveryCounters(stats);
+    if(current==e->loggedRecovery)return;
+    uint64_t now=mach_absolute_time();
+    if(!force && e->lastRecoveryLogHost && double(now-e->lastRecoveryLogHost)*e->hostScale<1.0)return;
+    bool queued=appendEvent(e,@"pc_recovery_summary",@{@"recovery":current.json(),@"delta":current.delta(e->loggedRecovery),
+        @"pcFifoFrames":@(stats.fifoFrames[1]),@"pcUnderruns":@(stats.underruns[1]),@"engineState":ns(e->state),
+        @"note":@"Deltas are since the prior queued summary; cumulative totals remain authoritative if writes fail. observedAt is control-poll time, not the exact audio-frame time."});
+    if(queued)e->loggedRecovery=current;
+    e->lastRecoveryLogHost=now;
+}
+void finishEventLog(MREngine *e) {
+    if(!e->logSessionOpen)return;
+    MRCoreStats stats=e->lastStats;if(e->core)mr_core_snapshot(e->core,&stats);
+    logRecovery(e,stats,true);
+    appendEvent(e,@"session_end",@{@"engineState":ns(e->state),@"error":e->error.empty()?(id)NSNull.null:ns(e->error),
+        @"fault":@(stats.fault?stats.fault:e->signals->rtFault.load()),@"pcRecovery":recoveryCounters(stats).json(),
+        @"unsafeTeardown":@(e->unsafeTeardown),@"tapActive":@(e->tap!=0),@"aggregateActive":@(e->aggregate!=0)});
+    e->logSessionOpen=false;e->eventLog->flush();
+}
 void fault(MREngine *e, int code) { int zero=0; e->signals->rtFault.compare_exchange_strong(zero,code,std::memory_order_relaxed); }
 MRTime timeAt(MREngine *e, const AudioTimeStamp *ts) {
     if (!ts) return {0,0,0};
@@ -627,8 +674,9 @@ void reset(MREngine *e) {
     for(auto &io:e->io){io.device=0;io.inputChannels=io.outputChannels=0;io.left=0;io.right=1;io.callbacks.store(0);io.frames.store(0);io.heartbeat.store(0);io.completedOutputFrames.store(0);io.timestampTraceCount.store(0);io.timestampTrace={};io.previousArmedArrival=0;io.armedCallbacks.store(0);io.maxCallbackIntervalTicks.store(0);io.maxProcessingTicks.store(0);io.minInputFrames.store(UINT32_MAX);io.maxInputFrames.store(0);io.minOutputFrames.store(UINT32_MAX);io.maxOutputFrames.store(0);}
 }
 bool begin(MREngine *e,const char *json,bool probe,std::string &error) {
-    if(!stop(e)){error=e->error;return false;}reset(e);e->state="starting";e->probe=probe;
+    if(!stop(e)){finishEventLog(e);error=e->error;return false;}finishEventLog(e);reset(e);e->state="starting";e->probe=probe;
     Config c;if(!parse(json,c,probe,error))return false;e->config=std::move(c);
+    startEventLog(e);
     if(!probe){
         if(!inspectDevice(e->rme,e->config.rmeUID,true,true,true,error)||!inspectDevice(e->d4,e->config.d4UID,true,true,true,error))return false;
         if(e->rme.id==e->d4.id){error="RME and Discrete4 resolve to the same device";return false;}
@@ -671,7 +719,8 @@ bool begin(MREngine *e,const char *json,bool probe,std::string &error) {
     // physical clocks first and keep all callbacks diagnostic-only until every start returns.
     if(!probe && (!startIO(e->io[0],error)||!startIO(e->io[1],error)))return false;
     if(!startIO(e->io[2],error))return false;
-    e->active=true;e->state=probe?"probe":"priming";e->captureArmed.store(true,std::memory_order_release);return true;
+    e->active=true;e->state=probe?"probe":"priming";e->captureArmed.store(true,std::memory_order_release);
+    appendEvent(e,@"session_started",@{@"engineState":ns(e->state),@"actualBufferFrames":@[@(e->rme.buffer),@(e->tapBuffer),@(e->d4.buffer)]});return true;
 }
 bool unchanged(const DeviceRecord &d,bool withInput,bool withOutput,std::string &error){
     if(!d.id)return true;UInt32 alive=0,buffer=0;Float64 rate=0;
@@ -698,6 +747,7 @@ std::string coreError(const MRCoreStats &stats){
 }
 void poll(MREngine *e,MRCoreStats &stats){
     if(e->core){mr_core_snapshot(e->core,&stats);e->lastStats=stats;}else stats=e->lastStats;
+    logRecovery(e,stats);
     if(!e->active)return;std::string why;int code=e->signals->rtFault.load(std::memory_order_relaxed);
     if(code && code!=4)why=rtError(code);else if(stats.fault)why=coreError(stats);
     if(why.empty()&&!e->probe){if(!unchanged(e->rme,true,true,why)||!unchanged(e->d4,true,true,why)){} }
@@ -711,7 +761,7 @@ void poll(MREngine *e,MRCoreStats &stats){
     uint64_t now=mach_absolute_time();double elapsed=double(now-e->startHost)*e->hostScale;
     if(why.empty())for(int i=e->probe?2:0;i<3;++i){uint64_t h=e->io[i].heartbeat.load(std::memory_order_relaxed);if((!h&&elapsed>kStartTimeout)||(h&&now>h&&double(now-h)*e->hostScale>kHeartbeatTimeout)){why=i==2?"PC Tap callback timeout; tap-only clock/start viability is unproven for this output stream":"Physical audio callback timeout";break;}}
     if(why.empty()&&!e->probe){if((stats.primedMask&7)==7)e->state="running";else if(elapsed>kStartTimeout)why="Audio sources did not prime within eight seconds";}
-    if(!why.empty()){fault(e,100);e->error=why;e->state="fault";stop(e);}
+    if(!why.empty()){fault(e,100);e->error=why;e->state="fault";stop(e);finishEventLog(e);}
     e->signals->dirty.store(false,std::memory_order_relaxed);
 }
 NSArray *timestampTraceJSON(MREngine *e){
@@ -745,6 +795,10 @@ NSDictionary *snapshot(MREngine *e){
     for(int i=0;i<3;++i){NSMutableArray *peaks=[NSMutableArray array], *gates=[NSMutableArray array];for(uint32_t ch=0;ch<counts[i]&&ch<MR_MAX_CHANNELS;++ch){[peaks addObject:@(stats.inputPeak[i][ch])];[gates addObject:@(stats.gateGain[i][ch])];}[sources addObject:@{@"name":sourceNames[i],@"callbacks":@(e->io[ios[i]].callbacks.load()),@"frames":@(stats.inputFrames[i]),@"fifoFrames":@(stats.fifoFrames[i]),@"fifoMin":@(stats.fifoMin[i]),@"fifoMax":@(stats.fifoMax[i]),@"underruns":@(stats.underruns[i]),@"overflows":@(stats.overflows[i]),@"startupDiscardedFrames":@(stats.startupDiscardedFrames[i]),@"ppm":@(stats.correctionPPM[i]),@"peaks":peaks,@"gateGains":gates}];}
     result[@"sources"]=sources;result[@"outputPeaks"]=@[@(stats.outputPeak[0]),@(stats.outputPeak[1])];result[@"primedMask"]=@(stats.primedMask);result[@"teardownDiagnostic"]=e->teardownDiagnostic.empty()?(id)NSNull.null:ns(e->teardownDiagnostic);
     result[@"ioTiming"]=ioTimingJSON(e);
+    result[@"pcRecoveryCount"]=@(stats.pcRecoveryCount);result[@"pcRecoveryCompleted"]=@(stats.pcRecoveryCompleted);
+    result[@"pcRecoveryDiscardedFrames"]=@(stats.pcRecoveryDiscardedFrames);result[@"pcRecoveryOutputFrames"]=@(stats.pcRecoveryOutputFrames);
+    result[@"pcRecovering"]=@(stats.pcRecovering!=0);result[@"pcLastRecoveryMissingFrames"]=@(stats.pcLastRecoveryMissingFrames);
+    result[@"eventLog"]=e->eventLog?(id)e->eventLog->status():NSNull.null;
     if(stats.clockFailure.valid){
         const auto &clock=stats.clockFailure;auto finiteNumber=[](double value)->id{return std::isfinite(value)?(id)@(value):NSNull.null;};
         result[@"clockFailure"]=@{@"tracker":@(clock.tracker),@"trackerName":ns(clockTrackerName(clock.tracker)),@"reason":@(clock.reason),@"previousValid":@(clock.previousValid),@"previousFrames":@(clock.previousFrames),@"previousSampleTime":finiteNumber(clock.previousSampleTime),@"expectedSampleTime":finiteNumber(clock.expectedSampleTime),@"currentSampleTime":finiteNumber(clock.currentSampleTime),@"previousHostSeconds":finiteNumber(clock.previousHostSeconds),@"currentHostSeconds":finiteNumber(clock.currentHostSeconds)};
@@ -787,10 +841,10 @@ extern "C" char *mr_engine_latency_capture_json(MREngine *e) {
         return jsonString(@{@"sampleRate":@(kRate),@"streams":streams,@"boundary":@"HAL buffer frame host timestamps; not physical ADC/DAC measurement",@"armed":@(e->latency->armRequested)});
     }
 }
-extern "C" void mr_engine_destroy(MREngine *e){if(!e)return;@autoreleasepool{fadeBeforeStop(e);if(stop(e))delete e;}}
-extern "C" int mr_engine_start(MREngine *e,const char *json,char *error,size_t size){if(!e){errorOut(error,size,"Engine is null");return 1;}@autoreleasepool{std::string why;bool ok=false;try{ok=begin(e,json,false,why);}catch(const std::exception &x){why=x.what();}catch(...){why="Unexpected engine setup error";}if(!ok){e->error=why;stop(e);e->state="fault";errorOut(error,size,e->error);return 1;}errorOut(error,size,"");return 0;}}
-extern "C" int mr_engine_probe_start(MREngine *e,const char *json,char *error,size_t size){if(!e){errorOut(error,size,"Engine is null");return 1;}@autoreleasepool{std::string why;bool ok=false;try{ok=begin(e,json,true,why);}catch(const std::exception &x){why=x.what();}catch(...){why="Unexpected Tap setup error";}if(!ok){e->error=why;stop(e);e->state="fault";errorOut(error,size,e->error);return 1;}errorOut(error,size,"");return 0;}}
-extern "C" void mr_engine_stop(MREngine *e){if(!e)return;@autoreleasepool{fadeBeforeStop(e);if(stop(e)){e->state="off";e->error=e->teardownDiagnostic;}}}
+extern "C" void mr_engine_destroy(MREngine *e){if(!e)return;@autoreleasepool{fadeBeforeStop(e);bool safe=stop(e);finishEventLog(e);if(safe)delete e;}}
+extern "C" int mr_engine_start(MREngine *e,const char *json,char *error,size_t size){if(!e){errorOut(error,size,"Engine is null");return 1;}@autoreleasepool{std::string why;bool ok=false;try{ok=begin(e,json,false,why);}catch(const std::exception &x){why=x.what();}catch(...){why="Unexpected engine setup error";}if(!ok){e->error=why;stop(e);e->state="fault";finishEventLog(e);errorOut(error,size,e->error);return 1;}errorOut(error,size,"");return 0;}}
+extern "C" int mr_engine_probe_start(MREngine *e,const char *json,char *error,size_t size){if(!e){errorOut(error,size,"Engine is null");return 1;}@autoreleasepool{std::string why;bool ok=false;try{ok=begin(e,json,true,why);}catch(const std::exception &x){why=x.what();}catch(...){why="Unexpected Tap setup error";}if(!ok){e->error=why;stop(e);e->state="fault";finishEventLog(e);errorOut(error,size,e->error);return 1;}errorOut(error,size,"");return 0;}}
+extern "C" void mr_engine_stop(MREngine *e){if(!e)return;@autoreleasepool{fadeBeforeStop(e);if(stop(e)){e->state="off";e->error=e->teardownDiagnostic;}finishEventLog(e);}}
 extern "C" void mr_engine_set_channel(MREngine *e,uint32_t source,uint32_t channel,float gain,float pan,int muted){if(!e||!e->core||source>1||!std::isfinite(gain)||gain<-96||gain>12||!std::isfinite(pan)||pan<-1||pan>1)return;uint32_t count=source==0?e->rme.inputs:e->tapChannels;if(channel>=count)return;mr_core_set_channel(e->core,source,channel,gain,pan,muted!=0);}
 extern "C" void mr_engine_set_master(MREngine *e,float forward,float returning,int muted){if(!e||!e->core||!std::isfinite(forward)||forward<-96||forward>12||!std::isfinite(returning)||returning<-96||returning>12)return;mr_core_set_master(e->core,forward,returning,muted!=0);}
 extern "C" char *mr_engine_status_json(MREngine *e){@autoreleasepool{if(!e)return jsonString(@{@"state":@"fault",@"error":@"Engine is null"});return jsonString(snapshot(e));}}

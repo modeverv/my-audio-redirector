@@ -1,0 +1,16 @@
+Extracted from the successful full Release suite; original stdout preserved in full-core-tests.txt.
+PASS 100 PC-only recovery episodes B16 quality0; fresh audio, declick, counters and continuous other paths
+  offline failing D4 core render incl SRC reset: n=100 p50=2.167us p99=2.750us max=2.916us; I/O period=333.333us (not a realtime bound)
+PASS 100 PC-only recovery episodes B16 quality1; fresh audio, declick, counters and continuous other paths
+  offline failing D4 core render incl SRC reset: n=100 p50=4.583us p99=5.208us max=5.709us; I/O period=333.333us (not a realtime bound)
+PASS 100 PC-only recovery episodes B32 quality0; fresh audio, declick, counters and continuous other paths
+  offline failing D4 core render incl SRC reset: n=100 p50=3.250us p99=3.834us max=3.916us; I/O period=666.667us (not a realtime bound)
+PASS 100 PC-only recovery episodes B32 quality1; fresh audio, declick, counters and continuous other paths
+  offline failing D4 core render incl SRC reset: n=100 p50=6.667us p99=7.500us max=8.250us; I/O period=666.667us (not a realtime bound)
+PASS 100 PC-only recovery episodes B64 quality0; fresh audio, declick, counters and continuous other paths
+  offline failing D4 core render incl SRC reset: n=100 p50=5.292us p99=6.167us max=9.417us; I/O period=1333.333us (not a realtime bound)
+PASS 100 PC-only recovery episodes B64 quality1; fresh audio, declick, counters and continuous other paths
+  offline failing D4 core render incl SRC reset: n=100 p50=10.958us p99=11.875us max=22.916us; I/O period=1333.333us (not a realtime bound)
+PASS immediate PC catch-up waits for the full 1ms fade-out at B16/B32/B64 and both SRC qualities
+PASS PC recovery preserves initial priming and fatal RME/return starvation, PC nonfinite/clock/overflow and output clock checks
+PASS concurrent PC starvation/recovery, independent physical streams, controls and snapshots

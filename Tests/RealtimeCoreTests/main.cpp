@@ -322,6 +322,228 @@ void faults() {
       require(stats(core.get()).fault==6,"nonfinite timestamp accepted"); }
 }
 
+void fillPC(Signals &x, float left, float right) {
+    for(unsigned f=0;f<x.block;++f){x.data[1][2*f]=left;x.data[1][2*f+1]=right;}
+}
+void cycleWithoutPC(MRCore *core, Signals &x) {
+    x.push(core,0);x.push(core,2);x.render(core,0);x.render(core,1);
+}
+void requireReturnContinuous(const Signals &x) {
+    for(unsigned f=0;f<x.block;++f)
+        require(std::abs(x.back[2*f]-.30f)<3e-4f&&std::abs(x.back[2*f+1]+.40f)<3e-4f,
+                "PC recovery interrupted or changed the independent return");
+}
+void requireRMEOnly(const Signals &x) {
+    for(unsigned f=0;f<x.block;++f)
+        require(std::abs(x.forward[2*f]-.10f)<3e-4f&&std::abs(x.forward[2*f+1]-.20f)<3e-4f,
+                "PC recovery wait interrupted RME or replayed PC audio");
+}
+void enterPCRecovery(MRCore *core, Signals &x, double *failingRenderUS=nullptr) {
+    const auto before=stats(core);
+    for(unsigned n=0;n<64&&!stats(core).pcRecovering;++n){
+        x.push(core,0);x.push(core,2);
+        const auto started=std::chrono::steady_clock::now();
+        x.render(core,0);
+        const double elapsed=std::chrono::duration<double,std::micro>(std::chrono::steady_clock::now()-started).count();
+        x.render(core,1);requireReturnContinuous(x);
+        if(failingRenderUS&&stats(core).pcRecovering)*failingRenderUS=elapsed;
+    }
+    const auto after=stats(core);
+    require(!after.fault&&after.pcRecovering&&after.primedMask==7,
+            "PC-only starvation stopped the engine or cleared the startup barrier");
+    require(after.pcRecoveryCount==before.pcRecoveryCount+1&&after.underruns[1]==before.underruns[1]+1,
+            "PC starvation did not count exactly one recovery episode");
+    require(after.pcLastRecoveryMissingFrames>0&&after.pcLastRecoveryMissingFrames<=x.block,
+            "PC recovery missing-frame count is outside the failed block");
+    require(after.pcRecoveryOutputFrames>=before.pcRecoveryOutputFrames+x.block,
+            "failed PC output block was not counted as replacement audio");
+}
+
+void pcRecoveryAndFreshAudio() {
+    for(unsigned block:{16u,32u,64u})for(int quality:{0,1}) {
+        auto core=create(config(block,quality,block));Signals x(block);enable(core.get());
+        std::array<double,100> recoveryRenderUS{};
+        for(unsigned n=0;n<160;++n)cycle(core.get(),x);
+        require(stats(core.get()).primedMask==7&&!stats(core.get()).fault,"PC recovery fixture did not prime");
+        for(unsigned episode=0;episode<100;++episode) {
+            const auto previous=stats(core.get());
+            const float oldLeft=x.data[1][0],oldRight=x.data[1][1];
+            enterPCRecovery(core.get(),x,&recoveryRenderUS[episode]);
+            auto entered=stats(core.get());
+            // A failed block can finish at any point in the 48-frame declick.
+            // The PC contribution must remain on the old-to-zero segment.
+            for(unsigned f=0;f<block;++f)for(unsigned ch=0;ch<2;++ch) {
+                const float old=ch?oldRight:oldLeft;
+                const float pc=x.forward[2*f+ch]-(ch?.20f:.10f);
+                require(std::isfinite(pc)&&pc>=std::min(old,0.f)-5e-4f&&pc<=std::max(old,0.f)+5e-4f,
+                        "PC declick introduced an unrelated sample or changed the RME stem");
+            }
+            const unsigned waitBlocks=(48+block-1)/block+3;
+            for(unsigned n=0;n<waitBlocks;++n){cycleWithoutPC(core.get(),x);requireReturnContinuous(x);}
+            requireRMEOnly(x);
+            auto waiting=stats(core.get());
+            require(!waiting.fault&&waiting.pcRecovering&&waiting.primedMask==7,
+                    "PC wait changed global readiness or fault state");
+            require(waiting.pcRecoveryCount==entered.pcRecoveryCount&&waiting.underruns[1]==entered.underruns[1]&&
+                    waiting.pcRecoveryCompleted==previous.pcRecoveryCompleted,
+                    "PC wait counted repeated episodes or premature completion");
+            require(waiting.pcRecoveryOutputFrames==entered.pcRecoveryOutputFrames+uint64_t(waitBlocks)*block,
+                    "PC replacement counter is not measured in destination frames");
+
+            // Deliver a catch-up backlog ending in a NEW, opposite-polarity
+            // marker. Reprime must choose its latest window and discard old
+            // ring audio; src_reset must also remove the old filter history.
+            for(unsigned n=0;n<8;++n)x.push(core.get(),1);
+            const float newLeft=episode%2?.05f:-.12f,newRight=episode%2?-.10f:.07f;
+            fillPC(x,newLeft,newRight);
+            for(unsigned n=0;n<8;++n)x.push(core.get(),1);
+            const auto backlog=stats(core.get());
+            const unsigned required=block+unsigned(std::ceil(block/.999))+(quality?47:20)+2;
+            require(backlog.fifoFrames[1]>required,"recovery fixture did not create a surplus backlog");
+            cycleWithoutPC(core.get(),x);requireReturnContinuous(x);
+            const auto recovered=stats(core.get());
+            require(!recovered.fault&&!recovered.pcRecovering&&recovered.primedMask==7&&
+                    recovered.pcRecoveryCompleted==previous.pcRecoveryCompleted+1,
+                    "PC did not complete recovery on first full fresh output");
+            require(recovered.pcRecoveryDiscardedFrames-backlog.pcRecoveryDiscardedFrames==backlog.fifoFrames[1]-required,
+                    "PC recovery did not trim exactly the surplus unread ring frames");
+            require(recovered.pcRecoveryOutputFrames==waiting.pcRecoveryOutputFrames,
+                    "fresh fade-in was counted as dropped PC output");
+            require(std::abs(x.forward[0]-.10f)<std::abs(newLeft)*.05f+5e-4f,
+                    "PC recovery resumed with an unfaded first sample");
+            for(unsigned f=0;f<block;++f)for(unsigned ch=0;ch<2;++ch) {
+                const float fresh=ch?newRight:newLeft;
+                const float pc=x.forward[2*f+ch]-(ch?.20f:.10f);
+                require(pc*fresh>=-1e-5f&&std::abs(pc)<=std::abs(fresh)*1.2f+5e-4f,
+                        "PC recovery replayed old FIFO/SRC audio instead of the fresh marker");
+            }
+            for(unsigned n=0;n<24;++n){cycle(core.get(),x);requireReturnContinuous(x);}
+            for(unsigned f=0;f<block;++f)
+                require(std::abs(x.forward[2*f]-(.10f+newLeft))<5e-4f&&
+                        std::abs(x.forward[2*f+1]-(.20f+newRight))<5e-4f,
+                        "PC recovery did not settle to the fresh stereo signal");
+            const auto settled=stats(core.get());
+            require(!settled.fault&&!settled.underruns[0]&&!settled.underruns[2]&&
+                    !settled.overflows[0]&&!settled.overflows[1]&&!settled.overflows[2]&&
+                    settled.pcRecoveryCount==episode+1&&settled.pcRecoveryCompleted==episode+1&&
+                    settled.underruns[1]==episode+1,
+                    "repeated PC recovery damaged another path or duplicated an episode");
+        }
+        std::sort(recoveryRenderUS.begin(),recoveryRenderUS.end());
+        std::printf("PASS 100 PC-only recovery episodes B%u quality%d; fresh audio, declick, counters and continuous other paths\n",block,quality);
+        std::printf("  offline failing D4 core render incl SRC reset: n=100 p50=%.3fus p99=%.3fus max=%.3fus; I/O period=%.3fus (not a realtime bound)\n",
+                    recoveryRenderUS[50],recoveryRenderUS[98],recoveryRenderUS[99],block/48000.*1e6);
+    }
+}
+
+void pcRecoveryFaultBoundaries() {
+    {auto core=create();Signals x(64);enable(core.get());
+     for(unsigned n=0;n<100;++n){cycleWithoutPC(core.get(),x);require(silent(x.forward)&&silent(x.back),"PC recovery bypassed the initial startup barrier");}
+     auto s=stats(core.get());require(!s.fault&&!s.underruns[1]&&!s.pcRecoveryCount&&!s.pcRecovering,
+                                    "PC initial priming was counted as running recovery");}
+    for(unsigned starved:{0u,2u}) {
+        auto core=create();Signals x(64);enable(core.get());for(unsigned n=0;n<100;++n)cycle(core.get(),x);
+        for(unsigned n=0;n<64&&!stats(core.get()).fault;++n){
+            for(unsigned source=0;source<3;++source)if(source!=starved)x.push(core.get(),source);
+            x.render(core.get(),0);x.render(core.get(),1);
+        }
+        auto s=stats(core.get());require(s.fault==3&&s.underruns[starved]==1&&!s.pcRecoveryCount,
+                                        "non-PC starvation was incorrectly made recoverable");
+        x.render(core.get(),0);x.render(core.get(),1);require(silent(x.forward)&&silent(x.back),"fatal starvation did not silence both destinations");
+    }
+    for(unsigned failure=0;failure<5;++failure) {
+        auto core=create();Signals x(64);enable(core.get());for(unsigned n=0;n<100;++n)cycle(core.get(),x);
+        // Seed a valid PC clock BEFORE the outage: recovery must preserve its
+        // continuity history, not silently accept a new origin on resumption.
+        if(failure==1||failure==2){x.push(core.get(),1,timeAt(0,48000));x.push(core.get(),1,timeAt(64,48000));}
+        enterPCRecovery(core.get(),x);
+        int expected=0;
+        if(failure==0){x.data[1][3]=std::numeric_limits<float>::quiet_NaN();x.push(core.get(),1);expected=5;}
+        if(failure==1){x.push(core.get(),1,timeAt(192,48000));expected=6;}
+        if(failure==2){x.push(core.get(),1,{128,64./48000,1});expected=6;}
+        if(failure==3){x.render(core.get(),0,timeAt(0,48000));x.render(core.get(),0,timeAt(128,48000));expected=6;}
+        if(failure==4){for(unsigned n=0;n<1000&&!stats(core.get()).fault;++n)x.push(core.get(),1);expected=4;}
+        auto s=stats(core.get());require(s.fault==expected,"PC recovery suppressed a non-recoverable fault");
+        x.render(core.get(),0);x.render(core.get(),1);require(silent(x.forward)&&silent(x.back),"PC recovery masked fatal output silence");
+    }
+    std::puts("PASS PC recovery preserves initial priming and fatal RME/return starvation, PC nonfinite/clock/overflow and output clock checks");
+}
+
+void pcRecoveryRapidRefill() {
+    for(unsigned block:{16u,32u,64u})for(int quality:{0,1}) {
+        auto core=create(config(block,quality,block));Signals x(block);enable(core.get());
+        for(unsigned n=0;n<160;++n)cycle(core.get(),x);
+        enterPCRecovery(core.get(),x);
+        const auto entered=stats(core.get());
+        fillPC(x,-.12f,.07f);
+        for(unsigned n=0;n<16;++n)x.push(core.get(),1);
+        const unsigned fadingBlocks=block<48?(48-block+block-1)/block:0;
+        float previousGain[2]={1,1};
+        for(unsigned n=0;n<fadingBlocks;++n) {
+            cycleWithoutPC(core.get(),x);requireReturnContinuous(x);
+            const auto s=stats(core.get());
+            require(!s.fault&&s.pcRecovering&&s.pcRecoveryCompleted==entered.pcRecoveryCompleted,
+                    "rapid PC refill interrupted the 48-frame fade-out");
+            for(unsigned f=0;f<block;++f)for(unsigned ch=0;ch<2;++ch) {
+                const float pc=x.forward[2*f+ch]-(ch?.20f:.10f);
+                const float gain=pc/(ch?-.10f:.05f);
+                require(gain>=-1e-3f&&gain<=previousGain[ch]+1e-3f,
+                        "rapid PC refill stepped or started fresh audio during fade-out");
+                previousGain[ch]=gain;
+            }
+        }
+        cycleWithoutPC(core.get(),x);requireReturnContinuous(x);
+        const auto recovered=stats(core.get());
+        require(!recovered.fault&&!recovered.pcRecovering&&
+                recovered.pcRecoveryCompleted==entered.pcRecoveryCompleted+1&&
+                recovered.pcRecoveryOutputFrames==entered.pcRecoveryOutputFrames+uint64_t(fadingBlocks)*block,
+                "rapid PC refill did not resume immediately after the full fade-out");
+        for(unsigned f=0;f<block;++f)
+            require(x.forward[2*f]-.10f<5e-4f&&x.forward[2*f+1]-.20f>-5e-4f,
+                    "rapid refill replayed the old polarity after recovery");
+        for(unsigned n=0;n<24;++n){cycle(core.get(),x);requireReturnContinuous(x);}
+        require(std::abs(x.forward[block]+.02f)<5e-4f&&std::abs(x.forward[block+1]-.27f)<5e-4f,
+                "rapid refill did not settle to fresh PC audio");
+    }
+    std::puts("PASS immediate PC catch-up waits for the full 1ms fade-out at B16/B32/B64 and both SRC qualities");
+}
+
+void pcRecoveryRepeatedBeforeFadeInCompletes() {
+    for(unsigned block:{16u,32u,64u})for(int quality:{0,1}) {
+        auto core=create(config(block,quality,block));Signals x(block);enable(core.get());
+        for(unsigned n=0;n<160;++n)cycle(core.get(),x);
+        enterPCRecovery(core.get(),x);
+        for(unsigned n=0;n<(48+block-1)/block+1;++n)cycleWithoutPC(core.get(),x);
+        fillPC(x,-.12f,.07f);
+        const unsigned required=block+unsigned(std::ceil(block/.999))+(quality?47:20)+2;
+        for(unsigned n=0;n<(required+block-1)/block;++n)x.push(core.get(),1);
+        cycleWithoutPC(core.get(),x);
+        require(stats(core.get()).pcRecoveryCompleted==1&&!stats(core.get()).pcRecovering,
+                "short PC refill did not re-prime");
+        unsigned freshBlocks=1;
+        for(unsigned n=0;n<16&&!stats(core.get()).pcRecovering;++n) {
+            const float previousPC=x.forward[x.forward.size()-2]-.10f;
+            cycleWithoutPC(core.get(),x);requireReturnContinuous(x);
+            if(stats(core.get()).pcRecovering) {
+                const float firstPC=x.forward[0]-.10f;
+                require(std::abs(firstPC)<=std::abs(previousPC)+5e-4f&&firstPC*previousPC>=-1e-5f,
+                        "second PC outage stepped to an old full-gain sample");
+            } else ++freshBlocks;
+        }
+        const auto s=stats(core.get());
+        require(!s.fault&&s.pcRecovering&&s.pcRecoveryCount==2&&s.underruns[1]==2&&s.pcRecoveryCompleted==1,
+                "back-to-back PC outages were merged, lost, or made fatal");
+        if(block==16)require(freshBlocks*block<48,"B16 fixture did not interrupt the recovery fade-in");
+        for(unsigned n=0;n<(48+block-1)/block+2;++n){cycleWithoutPC(core.get(),x);requireReturnContinuous(x);}
+        requireRMEOnly(x);
+        for(unsigned n=0;n<(required+block-1)/block;++n)x.push(core.get(),1);
+        cycleWithoutPC(core.get(),x);
+        require(!stats(core.get()).fault&&stats(core.get()).pcRecoveryCompleted==2&&!stats(core.get()).pcRecovering,
+                "second PC episode did not recover independently");
+    }
+    std::puts("PASS back-to-back PC outages, including B16 starvation during the recovery fade-in");
+}
+
 void clockDiagnosticCall(Signals &signals, MRCore *core, unsigned tracker, MRTime time) {
     if (tracker < 3) signals.push(core, tracker, time);
     else signals.render(core, tracker - 3, time);
@@ -566,11 +788,78 @@ void concurrentSPSCAndControls() {
     require(!failed.load()&&!stats(core.get()).fault,"concurrent SPSC/control/snapshot failed");
     require(consumed.load()==cycles,"concurrent fixture did not complete all render calls");
 }
+
+void concurrentPCRecoveryAndControls() {
+    auto core=create();Signals x(64);enable(core.get());
+    for(unsigned n=0;n<160;++n)cycle(core.get(),x);
+    std::atomic<bool> stop{false},failed{false},allowPC{false};
+    std::atomic<unsigned> consumed{0};
+    constexpr unsigned cycles=4096;
+    // Only physical-path reserves pace the consumer. PC capture deliberately
+    // pauses for 32 renders per 128; producer and recovery reader can overlap.
+    std::thread producer([&]{
+        while(!stop.load(std::memory_order_acquire)&&!failed.load()) {
+            const auto s=stats(core.get());if(s.fault){failed.store(true);break;}
+            bool progressed=false;
+            for(unsigned source:{0u,2u})if(s.fifoFrames[source]<=128){x.push(core.get(),source);progressed=true;}
+            if(allowPC.load(std::memory_order_acquire)&&s.fifoFrames[1]<=128){x.push(core.get(),1);progressed=true;}
+            if(!progressed)std::this_thread::yield();
+        }
+    });
+    std::thread consumer([&]{
+        for(unsigned n=0;n<cycles&&!failed.load();++n) {
+            allowPC.store(n%128>=32,std::memory_order_release);
+            while(!failed.load()) {
+                const auto s=stats(core.get());
+                if(s.fault){failed.store(true);break;}
+                if(s.fifoFrames[0]>=128&&s.fifoFrames[2]>=128)break;
+                std::this_thread::yield();
+            }
+            if(failed.load())break;
+            x.render(core.get(),0);x.render(core.get(),1);
+            const auto s=stats(core.get());
+            if(s.fault||s.underruns[0]||s.underruns[2])failed.store(true);
+            for(unsigned f=0;f<64;++f) {
+                if(!std::isfinite(x.forward[2*f])||!std::isfinite(x.forward[2*f+1])||
+                   x.forward[2*f]<.10f-5e-4f||x.forward[2*f+1]<.08f||
+                   std::abs(x.back[2*f]-.30f)>5e-4f||std::abs(x.back[2*f+1]+.40f)>5e-4f)failed.store(true);
+            }
+            consumed.store(n+1,std::memory_order_release);
+        }
+        stop.store(true,std::memory_order_release);
+    });
+    for(unsigned n=0;!stop.load(std::memory_order_acquire)&&!failed.load();++n) {
+        mr_core_set_channel(core.get(),1,0,n%2?-.2f:0,-1,0);
+        auto gate=gateSettings((n&16)!=0);gate.thresholdDB=n%32?-60:-40;
+        mr_core_set_gate(core.get(),1,0,&gate);
+        const auto s=stats(core.get());
+        if(s.fault||s.pcRecovering>1||
+           !std::isfinite(s.gateGain[1][0])||s.gateGain[1][0]<0||s.gateGain[1][0]>1)failed.store(true);
+        std::this_thread::yield();
+    }
+    producer.join();consumer.join();
+    const auto s=stats(core.get());
+    if(failed.load()||s.fault)std::fprintf(stderr,
+        "concurrent PC recovery fault=%d cycles=%u recoveries=%llu completed=%llu under=%llu/%llu/%llu levels=%u/%u/%u\n",
+        s.fault,consumed.load(),(unsigned long long)s.pcRecoveryCount,(unsigned long long)s.pcRecoveryCompleted,
+        (unsigned long long)s.underruns[0],(unsigned long long)s.underruns[1],(unsigned long long)s.underruns[2],
+        s.fifoFrames[0],s.fifoFrames[1],s.fifoFrames[2]);
+    require(!failed.load()&&!s.fault&&consumed.load()==cycles,"concurrent PC recovery/control/snapshot failed");
+    require(s.pcRecoveryCount>=16&&s.pcRecoveryCompleted>=16&&s.pcRecoveryCompleted<=s.pcRecoveryCount&&s.underruns[1]==s.pcRecoveryCount,
+            "concurrent fixture did not exercise repeated PC recovery");
+    require(!s.overflows[0]&&!s.overflows[1]&&!s.overflows[2],"concurrent recovery overflowed a source FIFO");
+    std::puts("PASS concurrent PC starvation/recovery, independent physical streams, controls and snapshots");
+}
 }
 
 int main(int argc, char **argv) {
     try {
         if(argc>1) {
+            if(argc==2&&std::strcmp(argv[1],"--pc-recovery-only")==0) {
+                pcRecoveryAndFreshAudio();pcRecoveryRapidRefill();pcRecoveryRepeatedBeforeFadeInCompletes();pcRecoveryFaultBoundaries();concurrentPCRecoveryAndControls();
+                require(rtAllocations.load()==0,"C++ allocation occurred in a realtime API");
+                std::puts("PASS PC recovery suite; no C++ realtime allocations");return 0;
+            }
             if(argc==2&&std::strcmp(argv[1],"--clock-diagnostics-only")==0) {
                 clockFailureDiagnostics();concurrentClockFailureDiagnostics();faults();negativeSampleOrigins();
                 require(rtAllocations.load()==0,"C++ allocation occurred in realtime API");
@@ -588,7 +877,7 @@ int main(int argc, char **argv) {
                 std::puts("PASS 16-frame offline regressions; no hardware stability or latency claim");
                 return 0;
             }
-            require(std::strcmp(argv[1],"--concurrency-only")==0 && argc<=3,"usage: CoreTests [--concurrency-only [repetitions] | --small-block-only | --gate-only | --gate-benchmark | --clock-diagnostics-only]");
+            require(std::strcmp(argv[1],"--concurrency-only")==0 && argc<=3,"usage: CoreTests [--concurrency-only [repetitions] | --pc-recovery-only | --small-block-only | --gate-only | --gate-benchmark | --clock-diagnostics-only]");
             char *end=nullptr;
             const unsigned long repetitions=argc==3?std::strtoul(argv[2],&end,10):1;
             require(repetitions>0&&repetitions<=100&&(argc!=3||*end=='\0'),"repetitions must be 1..100");
@@ -603,6 +892,7 @@ int main(int argc, char **argv) {
         initializationAndPriming();std::puts("PASS configuration, safe priming, stereo routing");
         rampsMuteAndClipping();std::puts("PASS gain/master ramps, mute, finite clipping");
         faults();std::puts("PASS underflow, overflow, nonfinite and timestamp fault silence");
+        pcRecoveryAndFreshAudio();pcRecoveryRapidRefill();pcRecoveryRepeatedBeforeFadeInCompletes();pcRecoveryFaultBoundaries();concurrentPCRecoveryAndControls();
         clockFailureDiagnostics();concurrentClockFailureDiagnostics();
         negativeSampleOrigins();
         for(unsigned block:{32u,64u})for(double ppm:{-100.,100.})for(double phase:{.07,.47,.93})simulate(block,0,ppm,phase,true);

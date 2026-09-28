@@ -46,7 +46,7 @@ typedef struct {
 typedef struct {
     uint64_t pushes[3], renders[2], inputFrames[3], outputFrames[2];
     uint64_t underruns[3], overflows[3], nonFinite, clipped;
-    uint64_t startupDiscardedFrames[3]; // consumer-only trim before first prime, never during running
+    uint64_t startupDiscardedFrames[3]; // consumer-only trim before first prime
     uint32_t fifoFrames[3], fifoMin[3], fifoMax[3];
     double correctionPPM[3];
     float inputPeak[3][MR_MAX_CHANNELS], outputPeak[2];
@@ -57,6 +57,14 @@ typedef struct {
     // until the complete record is published. Current values can be NaN/Inf
     // for NONFINITE_TIMESTAMP; consumers must encode them safely.
     MRClockFailure clockFailure;
+    // PC-only underrun recovery. Other faults still latch. These counters are
+    // monotonic per core, and snapshots may span an in-flight recovery change.
+    uint64_t pcRecoveryCount, pcRecoveryCompleted;
+    // Explicit unread FIFO discards, excluding discarded private SRC history.
+    uint64_t pcRecoveryDiscardedFrames;
+    // PC output frames replaced by declick/silence, excluding the recovery fade-in.
+    uint64_t pcRecoveryOutputFrames;
+    uint32_t pcRecovering, pcLastRecoveryMissingFrames;
 } MRCoreStats;
 MRCore *mr_core_create(const MRCoreConfig *, char *error, size_t errorSize);
 void mr_core_destroy(MRCore *); // only after ALL callbacks stopped

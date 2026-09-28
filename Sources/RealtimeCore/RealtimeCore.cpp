@@ -171,11 +171,15 @@ struct Source {
     ClockTracker inputClock;
     std::atomic<double> inputRate { 48000 };
     // Consumer-only state, never touched by the producer or snapshot thread.
-    bool primed = false, converterStarted = false;
+    bool primed = false, converterStarted = false, recovering = false;
+    std::array<float,2> lastOutput{}, recoveryTail{};
+    uint32_t fadeOutRemaining = 0, fadeInRemaining = 0;
     double ratio = 1, filteredError = 0, integral = 0;
     std::atomic<double> ppm { 0 };
     std::atomic<uint64_t> pushes { 0 }, frames { 0 }, underruns { 0 }, overflows { 0 };
     std::atomic<uint64_t> startupDiscarded { 0 };
+    std::atomic<uint64_t> recoveryCount { 0 }, recoveryCompleted { 0 }, recoveryDiscarded { 0 }, recoveryOutput { 0 };
+    std::atomic<uint32_t> recoveryActive { 0 }, lastRecoveryMissing { 0 };
     // Max has one writer (producer), min has one writer (consumer).
     std::atomic<uint32_t> minimum { UINT32_MAX }, maximum { 0 };
     ~Source() { if (src) src_delete(src); }
@@ -205,7 +209,7 @@ struct MRCore {
     std::atomic<uint32_t> primedMask { 0 };
     std::atomic<uint64_t> nonFinite { 0 }, clipped { 0 };
     std::atomic<uint64_t> masters { pairBits(1, 0) };
-    uint32_t rampFrames = 240, lookahead = 20;
+    uint32_t rampFrames = 240, recoveryRampFrames = 48, lookahead = 20;
 
     void fail(int code) {
         int expected = 0;
@@ -232,24 +236,65 @@ struct MRCore {
         fail(discontinuity);
     }
 
+    void concealPC(Source &s, float *out, uint32_t frames) {
+        // A single-sample tail avoids an abrupt edge. It is not replaying the
+        // failed/old PCM block, and reaches exact silence within one millisecond.
+        for(uint32_t f=0;f<frames;++f) {
+            const float gain=s.fadeOutRemaining ? float(--s.fadeOutRemaining)/float(recoveryRampFrames) : 0;
+            out[2*f]=s.recoveryTail[0]*gain;
+            out[2*f+1]=s.recoveryTail[1]*gain;
+        }
+        s.lastOutput={out[2*(frames-1)],out[2*(frames-1)+1]};
+        s.recoveryOutput.fetch_add(frames,std::memory_order_relaxed);
+    }
+
+    bool recoverPC(Source &s, float *out, uint32_t frames, uint32_t missing, double outputRate) {
+        // Only this source's consumer may change read or the SRC state. Never
+        // reset written/the producer clock, nor reset the startup barrier.
+        const uint64_t r=s.read.load(std::memory_order_relaxed);
+        const uint64_t w=s.written.load(std::memory_order_acquire);
+        s.read.store(w,std::memory_order_release);
+        s.recoveryDiscarded.fetch_add(w-r,std::memory_order_relaxed);
+        // Vendored Sinc reset only clears its already-allocated buffer/state.
+        if(src_reset(s.src)) { fail(converterError);return false; }
+        s.primed=false;s.converterStarted=false;s.recovering=true;
+        s.filteredError=s.integral=0;
+        s.ratio=std::clamp(outputRate/s.inputRate.load(std::memory_order_relaxed),
+                          1-kMaximumPPM*1e-6,1+kMaximumPPM*1e-6);
+        s.ppm.store((s.ratio-1)*1e6,std::memory_order_relaxed);
+        s.recoveryTail=s.lastOutput;s.fadeOutRemaining=recoveryRampFrames;s.fadeInRemaining=0;
+        s.lastRecoveryMissing.store(missing,std::memory_order_relaxed);
+        s.recoveryActive.store(1,std::memory_order_relaxed);
+        s.recoveryCount.fetch_add(1,std::memory_order_release);
+        concealPC(s,out,frames);
+        return true; // Valid PC contribution; RME input and return keep running.
+    }
+
     bool convert(unsigned index, float *out, uint32_t frames, double outputRate) {
         auto &s = source[index];
         std::fill_n(out, size_t(frames) * 2, 0.0f);
         if (!s.channels) return true;
+        // A fast producer burst must not interrupt a multi-block fade-out
+        // (notably B16/B32) by jumping straight into the new signal's fade-in.
+        if(s.recovering && s.fadeOutRemaining) { concealPC(s,out,frames);return true; }
         if (!s.primed) {
             // Q is the unread application FIFO reserve, EXCLUDING the
             // converter's lookahead. No target is silently increased.
             const uint32_t required = s.target + uint32_t(std::ceil(frames / 0.999)) + lookahead + 2;
             const uint32_t available = s.available();
-            if (available < required) return false;
+            if (available < required) {
+                if(s.recovering) { concealPC(s,out,frames);return true; }
+                return false;
+            }
             // Different device start calls can take different amounts of time.
-            // Before the FIRST output only, retain the most recent priming
-            // window. Never play an old startup backlog and slowly chase it.
+            // Retain the newest priming window at startup and PC recovery.
+            // Never play an old backlog and slowly chase it after a dropout.
             if (available > required) {
                 const uint32_t discarded = available - required;
                 const uint64_t r = s.read.load(std::memory_order_relaxed);
                 s.read.store(r + discarded, std::memory_order_release);
-                s.startupDiscarded.store(discarded, std::memory_order_relaxed);
+                if(s.recovering)s.recoveryDiscarded.fetch_add(discarded,std::memory_order_relaxed);
+                else s.startupDiscarded.store(discarded, std::memory_order_relaxed);
             }
             s.primed = true;
         }
@@ -282,7 +327,20 @@ struct MRCore {
         if (produced != frames) {
             s.underruns.fetch_add(1, std::memory_order_relaxed);
             s.minimum.store(0, std::memory_order_relaxed);
+            if(index==1)return recoverPC(s,out,frames,uint32_t(frames-produced),outputRate);
             fail(starvation); return false;
+        }
+        if(s.recovering) {
+            s.recovering=false;s.fadeOutRemaining=0;s.fadeInRemaining=recoveryRampFrames;
+            s.recoveryActive.store(0,std::memory_order_relaxed);
+            s.recoveryCompleted.fetch_add(1,std::memory_order_release);
+        }
+        if(index==1) {
+            for(uint32_t f=0;f<frames && s.fadeInRemaining;++f) {
+                const float gain=1-float(--s.fadeInRemaining)/float(recoveryRampFrames);
+                out[2*f]*=gain;out[2*f+1]*=gain;
+            }
+            s.lastOutput={out[2*(frames-1)],out[2*(frames-1)+1]};
         }
         const uint32_t level = s.available();
         s.minimum.store(std::min(level, s.minimum.load(std::memory_order_relaxed)), std::memory_order_relaxed);
@@ -333,7 +391,7 @@ extern "C" MRCore *mr_core_create(const MRCoreConfig *config, char *error, size_
             for (uint32_t c = 0; c < s.channels; ++c)
                 s.channel[c].gate.configure(s.channel[c].gateCommand.load(std::memory_order_relaxed), config->sampleRate);
             // Capacity tolerates asynchronous device startup. It is NOT the
-            // target latency; the consumer trims excess once when priming.
+            // target latency; the consumer trims excess when priming/recovering.
             uint32_t capacity = 32768;
             while (capacity < s.target + config->maxFrames * 4 + 128) capacity *= 2;
             s.capacity = capacity; s.mask = capacity - 1;
@@ -520,4 +578,11 @@ extern "C" void mr_core_snapshot(MRCore *core, MRCoreStats *out) {
     out->primedMask = core->primedMask.load(std::memory_order_acquire); out->fault = core->fault.load(std::memory_order_relaxed);
     out->nonFinite = core->nonFinite.load(std::memory_order_relaxed); out->clipped = core->clipped.load(std::memory_order_relaxed);
     if (core->clockFailureReady.load(std::memory_order_acquire)) out->clockFailure = core->clockFailure;
+    auto &pc=core->source[1];
+    out->pcRecoveryCount=pc.recoveryCount.load(std::memory_order_acquire);
+    out->pcRecoveryCompleted=pc.recoveryCompleted.load(std::memory_order_acquire);
+    out->pcRecoveryDiscardedFrames=pc.recoveryDiscarded.load(std::memory_order_relaxed);
+    out->pcRecoveryOutputFrames=pc.recoveryOutput.load(std::memory_order_relaxed);
+    out->pcRecovering=pc.recoveryActive.load(std::memory_order_relaxed);
+    out->pcLastRecoveryMissingFrames=pc.lastRecoveryMissing.load(std::memory_order_relaxed);
 }

@@ -1,0 +1,1 @@
+PASS: synthetic recovery deltas, 1-second aggregation, forced stop drain, snapshot fields, JSON readback, four-file rotation, write failure, failure retention, lock contention; audioStarted=false; directory=/tmp/my-redirector-event-log-tests-9RYjAV

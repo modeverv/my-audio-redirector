@@ -1,0 +1,60 @@
+PASS gate threshold/hysteresis, sample-exact attack/hold/release and 16/32/64 block continuity
+PASS per-source stereo max detector, common gain, first-channel settings and linked return default
+PASS default noise suppression before gain/pan, exact-zero outputs, bypass and live enable
+PASS gate parameter bounds, nonfinite fail-closed and stopped-only link changes
+PASS maximum envelope times, bounded monotonic release and smooth live settings updates
+PASS configuration, safe priming, stereo routing
+PASS gain/master ramps, mute, finite clipping
+PASS underflow, overflow, nonfinite and timestamp fault silence
+PASS 100 PC-only recovery episodes B16 quality0; fresh audio, declick, counters and continuous other paths
+  offline failing D4 core render incl SRC reset: n=100 p50=2.167us p99=2.750us max=2.916us; I/O period=333.333us (not a realtime bound)
+PASS 100 PC-only recovery episodes B16 quality1; fresh audio, declick, counters and continuous other paths
+  offline failing D4 core render incl SRC reset: n=100 p50=4.583us p99=5.208us max=5.709us; I/O period=333.333us (not a realtime bound)
+PASS 100 PC-only recovery episodes B32 quality0; fresh audio, declick, counters and continuous other paths
+  offline failing D4 core render incl SRC reset: n=100 p50=3.250us p99=3.834us max=3.916us; I/O period=666.667us (not a realtime bound)
+PASS 100 PC-only recovery episodes B32 quality1; fresh audio, declick, counters and continuous other paths
+  offline failing D4 core render incl SRC reset: n=100 p50=6.667us p99=7.500us max=8.250us; I/O period=666.667us (not a realtime bound)
+PASS 100 PC-only recovery episodes B64 quality0; fresh audio, declick, counters and continuous other paths
+  offline failing D4 core render incl SRC reset: n=100 p50=5.292us p99=6.167us max=9.417us; I/O period=1333.333us (not a realtime bound)
+PASS 100 PC-only recovery episodes B64 quality1; fresh audio, declick, counters and continuous other paths
+  offline failing D4 core render incl SRC reset: n=100 p50=10.958us p99=11.875us max=22.916us; I/O period=1333.333us (not a realtime bound)
+PASS immediate PC catch-up waits for the full 1ms fade-out at B16/B32/B64 and both SRC qualities
+PASS PC recovery preserves initial priming and fatal RME/return starvation, PC nonfinite/clock/overflow and output clock checks
+PASS concurrent PC starvation/recovery, independent physical streams, controls and snapshots
+PASS all five clock identities, exact first-failure values/reasons, immutable record and unchanged timestamp acceptance
+PASS concurrent clock failures and snapshots publish one complete immutable record (100 races)
+PASS negative sample origins, zero crossing, independent timelines and strict running reset
+  simulated 60s B32 quality0 drift-100ppm phase0.07 timestamps1 Q64; FIFO 47/77/113, ppm 97.41/-129.94/-97.14
+  simulated 60s B32 quality0 drift-100ppm phase0.47 timestamps1 Q64; FIFO 65/67/95, ppm 110.59/-91.93/-110.33
+  simulated 60s B32 quality0 drift-100ppm phase0.93 timestamps1 Q64; FIFO 77/96/83, ppm 56.11/-79.74/-56.07
+  simulated 60s B32 quality0 drift+100ppm phase0.07 timestamps1 Q64; FIFO 83/64/77, ppm -56.06/79.71/56.10
+  simulated 60s B32 quality0 drift+100ppm phase0.47 timestamps1 Q64; FIFO 93/88/67, ppm -101.64/112.98/101.92
+  simulated 60s B32 quality0 drift+100ppm phase0.93 timestamps1 Q64; FIFO 113/83/47, ppm -97.20/129.94/97.47
+  simulated 60s B64 quality0 drift-100ppm phase0.07 timestamps1 Q64; FIFO 75/110/117, ppm 84.98/-16.15/-84.22
+  simulated 60s B64 quality0 drift-100ppm phase0.47 timestamps1 Q64; FIFO 87/83/105, ppm 15.59/-168.54/-15.64
+  simulated 60s B64 quality0 drift-100ppm phase0.93 timestamps1 Q64; FIFO 130/136/62, ppm 123.75/-128.26/-123.68
+  simulated 60s B64 quality0 drift+100ppm phase0.07 timestamps1 Q64; FIFO 62/56/130, ppm -123.67/128.44/123.75
+  simulated 60s B64 quality0 drift+100ppm phase0.47 timestamps1 Q64; FIFO 104/89/88, ppm -53.71/168.55/53.72
+  simulated 60s B64 quality0 drift+100ppm phase0.93 timestamps1 Q64; FIFO 117/82/75, ppm -84.18/15.81/84.92
+  simulated 60s B32 quality1 drift+100ppm phase0.37 timestamps1 Q64; FIFO 90/77/70, ppm -88.43/60.00/88.70
+  simulated 60s B64 quality1 drift-100ppm phase0.79 timestamps1 Q64; FIFO 117/115/75, ppm 175.48/-40.40/-175.31
+  simulated 60s B64 quality0 drift+100ppm phase0.37 timestamps0 Q64; FIFO 97/82/95, ppm -189.29/0.01/188.91
+  simulated 60s B64 quality0 drift-100ppm phase0.79 timestamps0 Q64; FIFO 116/116/76, ppm 177.27/-42.36/-177.05
+  simulated 60s B32 quality0 drift-100ppm phase0.07 timestamps1 Q32; FIFO 15/45/81, ppm 97.41/-129.94/-97.14
+  simulated 60s B32 quality0 drift-100ppm phase0.47 timestamps1 Q32; FIFO 33/35/63, ppm 110.59/-91.93/-110.33
+  simulated 60s B32 quality0 drift-100ppm phase0.93 timestamps1 Q32; FIFO 45/64/51, ppm 56.11/-79.74/-56.07
+  simulated 60s B32 quality0 drift+100ppm phase0.07 timestamps1 Q32; FIFO 51/32/45, ppm -56.06/79.71/56.10
+  simulated 60s B32 quality0 drift+100ppm phase0.47 timestamps1 Q32; FIFO 61/56/35, ppm -101.64/112.98/101.92
+  simulated 60s B32 quality0 drift+100ppm phase0.93 timestamps1 Q32; FIFO 81/51/15, ppm -97.20/129.94/97.47
+  simulated 60s B16 quality0 drift-100ppm phase0.07 timestamps1 Q16; FIFO 8/16/39, ppm 98.15/-74.38/-97.62
+  simulated 60s B16 quality0 drift-100ppm phase0.47 timestamps1 Q16; FIFO 16/29/32, ppm 105.88/-61.67/-105.86
+  simulated 60s B16 quality0 drift-100ppm phase0.93 timestamps1 Q16; FIFO 23/28/25, ppm 77.27/-57.18/-77.10
+  simulated 60s B16 quality0 drift+100ppm phase0.07 timestamps1 Q16; FIFO 25/20/23, ppm -77.09/57.19/77.26
+  simulated 60s B16 quality0 drift+100ppm phase0.47 timestamps1 Q16; FIFO 31/17/17, ppm -101.76/69.80/101.78
+  simulated 60s B16 quality0 drift+100ppm phase0.93 timestamps1 Q16; FIFO 39/32/8, ppm -97.65/74.40/98.17
+  Q32/B64 phase-crossing limitation detected: fault3, no hidden target increase
+PASS bounded startup backlog discard, no steady skips
+PASS maximum channel/frame bounds
+PASS concurrent SPSC, controls and telemetry
+PASS realtime C++ allocation guard (C allocator audit separate)
+All offline tests passed. Simulated intervals are not hardware stability measurements.
