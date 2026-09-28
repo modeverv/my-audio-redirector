@@ -1,0 +1,583 @@
+{
+  "metadata": {
+    "library": "libsamplerate 0.2.2",
+    "source_url": "https://codeload.github.com/libsndfile/libsamplerate/tar.gz/refs/tags/0.2.2",
+    "source_sha256": "16e881487f184250deb4fcb60432d7556ab12cb58caea71ef23960aec6c0405a",
+    "measured_at": "2026-09-28T15:50:26.679201+09:00",
+    "host_cpu": "Apple M4 Max",
+    "host_os": "macOS-26.7-arm64-arm-64bit-Mach-O",
+    "compiler": "Apple clang version 21.0.0 (clang-2100.1.1.101)",
+    "build": "CMake Release static; benchmark clang -O3 -DNDEBUG",
+    "sample_rate_for_ms_conversion": 48000,
+    "channels": 2,
+    "sample_format": "interleaved Float32",
+    "offline_only": true,
+    "hardware_audio_io_opened": false,
+    "settings_changed": false,
+    "timing": "mach_absolute_time + mach_timebase_info; ordinary thread; elapsed wall time per src_process plus error branch",
+    "limitations": [
+      "This is not a hardware I/O, queue, device DSP, driver, scheduling or end-to-end latency measurement.",
+      "Peak output-array index is delay-aligned by the library; actual online availability was measured separately.",
+      "CPU figures are one short offline run, not a realtime deadline guarantee, allocation proof, or worst-case bound.",
+      "32/64 input block peak availability depends on impulse block phase; impulse was at input index 1024.",
+      "Fixed-ratio delay runs use 8192 source frames each, not a long-run drift controller test."
+    ]
+  },
+  "measurements": {
+    "delay": [
+      {
+        "mode": "Fastest Sinc Interpolator",
+        "output_per_input": 0.9999,
+        "block_frames": 1,
+        "first_output_after_input_frames": 21,
+        "first_call_output_frames": 1,
+        "first_B_output_after_input_frames": 21,
+        "impulse_peak_output_index": 1024,
+        "impulse_peak_available_input_delay_frames": 20,
+        "steady_input_minus_output_over_ratio_min": 19.182718,
+        "steady_input_minus_output_over_ratio_max": 19.79708,
+        "impulse_peak": 0.821393907
+      },
+      {
+        "mode": "Fastest Sinc Interpolator",
+        "output_per_input": 0.9999,
+        "block_frames": 32,
+        "first_output_after_input_frames": 32,
+        "first_call_output_frames": 12,
+        "first_B_output_after_input_frames": 64,
+        "impulse_peak_output_index": 1024,
+        "impulse_peak_available_input_delay_frames": 31,
+        "steady_input_minus_output_over_ratio_min": 19.182718,
+        "steady_input_minus_output_over_ratio_max": 19.793979,
+        "impulse_peak": 0.821393907
+      },
+      {
+        "mode": "Fastest Sinc Interpolator",
+        "output_per_input": 0.9999,
+        "block_frames": 64,
+        "first_output_after_input_frames": 64,
+        "first_call_output_frames": 44,
+        "first_B_output_after_input_frames": 128,
+        "impulse_peak_output_index": 1024,
+        "impulse_peak_available_input_delay_frames": 63,
+        "steady_input_minus_output_over_ratio_min": 19.182718,
+        "steady_input_minus_output_over_ratio_max": 19.790779,
+        "impulse_peak": 0.821393907
+      },
+      {
+        "mode": "Fastest Sinc Interpolator",
+        "output_per_input": 1.0,
+        "block_frames": 1,
+        "first_output_after_input_frames": 21,
+        "first_call_output_frames": 1,
+        "first_B_output_after_input_frames": 21,
+        "impulse_peak_output_index": 1024,
+        "impulse_peak_available_input_delay_frames": 20,
+        "steady_input_minus_output_over_ratio_min": 20.0,
+        "steady_input_minus_output_over_ratio_max": 20.0,
+        "impulse_peak": 0.831472397
+      },
+      {
+        "mode": "Fastest Sinc Interpolator",
+        "output_per_input": 1.0,
+        "block_frames": 32,
+        "first_output_after_input_frames": 32,
+        "first_call_output_frames": 12,
+        "first_B_output_after_input_frames": 64,
+        "impulse_peak_output_index": 1024,
+        "impulse_peak_available_input_delay_frames": 31,
+        "steady_input_minus_output_over_ratio_min": 20.0,
+        "steady_input_minus_output_over_ratio_max": 20.0,
+        "impulse_peak": 0.831472397
+      },
+      {
+        "mode": "Fastest Sinc Interpolator",
+        "output_per_input": 1.0,
+        "block_frames": 64,
+        "first_output_after_input_frames": 64,
+        "first_call_output_frames": 44,
+        "first_B_output_after_input_frames": 128,
+        "impulse_peak_output_index": 1024,
+        "impulse_peak_available_input_delay_frames": 63,
+        "steady_input_minus_output_over_ratio_min": 20.0,
+        "steady_input_minus_output_over_ratio_max": 20.0,
+        "impulse_peak": 0.831472397
+      },
+      {
+        "mode": "Fastest Sinc Interpolator",
+        "output_per_input": 1.0001,
+        "block_frames": 1,
+        "first_output_after_input_frames": 21,
+        "first_call_output_frames": 2,
+        "first_B_output_after_input_frames": 21,
+        "impulse_peak_output_index": 1024,
+        "impulse_peak_available_input_delay_frames": 19,
+        "steady_input_minus_output_over_ratio_min": 19.20298,
+        "steady_input_minus_output_over_ratio_max": 19.817218,
+        "impulse_peak": 0.82147795
+      },
+      {
+        "mode": "Fastest Sinc Interpolator",
+        "output_per_input": 1.0001,
+        "block_frames": 32,
+        "first_output_after_input_frames": 32,
+        "first_call_output_frames": 13,
+        "first_B_output_after_input_frames": 64,
+        "impulse_peak_output_index": 1024,
+        "impulse_peak_available_input_delay_frames": 31,
+        "steady_input_minus_output_over_ratio_min": 19.206079,
+        "steady_input_minus_output_over_ratio_max": 19.817218,
+        "impulse_peak": 0.82147795
+      },
+      {
+        "mode": "Fastest Sinc Interpolator",
+        "output_per_input": 1.0001,
+        "block_frames": 64,
+        "first_output_after_input_frames": 64,
+        "first_call_output_frames": 45,
+        "first_B_output_after_input_frames": 128,
+        "impulse_peak_output_index": 1024,
+        "impulse_peak_available_input_delay_frames": 63,
+        "steady_input_minus_output_over_ratio_min": 19.209279,
+        "steady_input_minus_output_over_ratio_max": 19.817218,
+        "impulse_peak": 0.82147795
+      },
+      {
+        "mode": "Medium Sinc Interpolator",
+        "output_per_input": 0.9999,
+        "block_frames": 1,
+        "first_output_after_input_frames": 48,
+        "first_call_output_frames": 1,
+        "first_B_output_after_input_frames": 48,
+        "impulse_peak_output_index": 1024,
+        "impulse_peak_available_input_delay_frames": 47,
+        "steady_input_minus_output_over_ratio_min": 46.185419,
+        "steady_input_minus_output_over_ratio_max": 46.79978,
+        "impulse_peak": 0.905613303
+      },
+      {
+        "mode": "Medium Sinc Interpolator",
+        "output_per_input": 0.9999,
+        "block_frames": 32,
+        "first_output_after_input_frames": 64,
+        "first_call_output_frames": 17,
+        "first_B_output_after_input_frames": 96,
+        "impulse_peak_output_index": 1024,
+        "impulse_peak_available_input_delay_frames": 63,
+        "steady_input_minus_output_over_ratio_min": 46.185419,
+        "steady_input_minus_output_over_ratio_max": 46.79668,
+        "impulse_peak": 0.905613303
+      },
+      {
+        "mode": "Medium Sinc Interpolator",
+        "output_per_input": 0.9999,
+        "block_frames": 64,
+        "first_output_after_input_frames": 64,
+        "first_call_output_frames": 17,
+        "first_B_output_after_input_frames": 128,
+        "impulse_peak_output_index": 1024,
+        "impulse_peak_available_input_delay_frames": 63,
+        "steady_input_minus_output_over_ratio_min": 46.185419,
+        "steady_input_minus_output_over_ratio_max": 46.793479,
+        "impulse_peak": 0.905613303
+      },
+      {
+        "mode": "Medium Sinc Interpolator",
+        "output_per_input": 1.0,
+        "block_frames": 1,
+        "first_output_after_input_frames": 48,
+        "first_call_output_frames": 1,
+        "first_B_output_after_input_frames": 48,
+        "impulse_peak_output_index": 1024,
+        "impulse_peak_available_input_delay_frames": 47,
+        "steady_input_minus_output_over_ratio_min": 47.0,
+        "steady_input_minus_output_over_ratio_max": 47.0,
+        "impulse_peak": 0.91906321
+      },
+      {
+        "mode": "Medium Sinc Interpolator",
+        "output_per_input": 1.0,
+        "block_frames": 32,
+        "first_output_after_input_frames": 64,
+        "first_call_output_frames": 17,
+        "first_B_output_after_input_frames": 96,
+        "impulse_peak_output_index": 1024,
+        "impulse_peak_available_input_delay_frames": 63,
+        "steady_input_minus_output_over_ratio_min": 47.0,
+        "steady_input_minus_output_over_ratio_max": 47.0,
+        "impulse_peak": 0.91906321
+      },
+      {
+        "mode": "Medium Sinc Interpolator",
+        "output_per_input": 1.0,
+        "block_frames": 64,
+        "first_output_after_input_frames": 64,
+        "first_call_output_frames": 17,
+        "first_B_output_after_input_frames": 128,
+        "impulse_peak_output_index": 1024,
+        "impulse_peak_available_input_delay_frames": 63,
+        "steady_input_minus_output_over_ratio_min": 47.0,
+        "steady_input_minus_output_over_ratio_max": 47.0,
+        "impulse_peak": 0.91906321
+      },
+      {
+        "mode": "Medium Sinc Interpolator",
+        "output_per_input": 1.0001,
+        "block_frames": 1,
+        "first_output_after_input_frames": 48,
+        "first_call_output_frames": 2,
+        "first_B_output_after_input_frames": 48,
+        "impulse_peak_output_index": 1024,
+        "impulse_peak_available_input_delay_frames": 46,
+        "steady_input_minus_output_over_ratio_min": 46.20028,
+        "steady_input_minus_output_over_ratio_max": 46.814519,
+        "impulse_peak": 0.905706465
+      },
+      {
+        "mode": "Medium Sinc Interpolator",
+        "output_per_input": 1.0001,
+        "block_frames": 32,
+        "first_output_after_input_frames": 64,
+        "first_call_output_frames": 18,
+        "first_B_output_after_input_frames": 96,
+        "impulse_peak_output_index": 1024,
+        "impulse_peak_available_input_delay_frames": 63,
+        "steady_input_minus_output_over_ratio_min": 46.20338,
+        "steady_input_minus_output_over_ratio_max": 46.814519,
+        "impulse_peak": 0.905706465
+      },
+      {
+        "mode": "Medium Sinc Interpolator",
+        "output_per_input": 1.0001,
+        "block_frames": 64,
+        "first_output_after_input_frames": 64,
+        "first_call_output_frames": 18,
+        "first_B_output_after_input_frames": 128,
+        "impulse_peak_output_index": 1024,
+        "impulse_peak_available_input_delay_frames": 63,
+        "steady_input_minus_output_over_ratio_min": 46.206579,
+        "steady_input_minus_output_over_ratio_max": 46.814519,
+        "impulse_peak": 0.905706465
+      },
+      {
+        "mode": "Best Sinc Interpolator",
+        "output_per_input": 0.9999,
+        "block_frames": 1,
+        "first_output_after_input_frames": 145,
+        "first_call_output_frames": 1,
+        "first_B_output_after_input_frames": 145,
+        "impulse_peak_output_index": 1024,
+        "impulse_peak_available_input_delay_frames": 144,
+        "steady_input_minus_output_over_ratio_min": 143.19512,
+        "steady_input_minus_output_over_ratio_max": 143.809481,
+        "impulse_peak": 0.950169265
+      },
+      {
+        "mode": "Best Sinc Interpolator",
+        "output_per_input": 0.9999,
+        "block_frames": 32,
+        "first_output_after_input_frames": 160,
+        "first_call_output_frames": 16,
+        "first_B_output_after_input_frames": 192,
+        "impulse_peak_output_index": 1024,
+        "impulse_peak_available_input_delay_frames": 159,
+        "steady_input_minus_output_over_ratio_min": 143.19512,
+        "steady_input_minus_output_over_ratio_max": 143.806381,
+        "impulse_peak": 0.950169265
+      },
+      {
+        "mode": "Best Sinc Interpolator",
+        "output_per_input": 0.9999,
+        "block_frames": 64,
+        "first_output_after_input_frames": 192,
+        "first_call_output_frames": 48,
+        "first_B_output_after_input_frames": 256,
+        "impulse_peak_output_index": 1024,
+        "impulse_peak_available_input_delay_frames": 191,
+        "steady_input_minus_output_over_ratio_min": 143.19512,
+        "steady_input_minus_output_over_ratio_max": 143.80318,
+        "impulse_peak": 0.950169265
+      },
+      {
+        "mode": "Best Sinc Interpolator",
+        "output_per_input": 1.0,
+        "block_frames": 1,
+        "first_output_after_input_frames": 145,
+        "first_call_output_frames": 1,
+        "first_B_output_after_input_frames": 145,
+        "impulse_peak_output_index": 1024,
+        "impulse_peak_available_input_delay_frames": 144,
+        "steady_input_minus_output_over_ratio_min": 144.0,
+        "steady_input_minus_output_over_ratio_max": 144.0,
+        "impulse_peak": 0.965728402
+      },
+      {
+        "mode": "Best Sinc Interpolator",
+        "output_per_input": 1.0,
+        "block_frames": 32,
+        "first_output_after_input_frames": 160,
+        "first_call_output_frames": 16,
+        "first_B_output_after_input_frames": 192,
+        "impulse_peak_output_index": 1024,
+        "impulse_peak_available_input_delay_frames": 159,
+        "steady_input_minus_output_over_ratio_min": 144.0,
+        "steady_input_minus_output_over_ratio_max": 144.0,
+        "impulse_peak": 0.965728402
+      },
+      {
+        "mode": "Best Sinc Interpolator",
+        "output_per_input": 1.0,
+        "block_frames": 64,
+        "first_output_after_input_frames": 192,
+        "first_call_output_frames": 48,
+        "first_B_output_after_input_frames": 256,
+        "impulse_peak_output_index": 1024,
+        "impulse_peak_available_input_delay_frames": 191,
+        "steady_input_minus_output_over_ratio_min": 144.0,
+        "steady_input_minus_output_over_ratio_max": 144.0,
+        "impulse_peak": 0.965728402
+      },
+      {
+        "mode": "Best Sinc Interpolator",
+        "output_per_input": 1.0001,
+        "block_frames": 1,
+        "first_output_after_input_frames": 145,
+        "first_call_output_frames": 2,
+        "first_B_output_after_input_frames": 145,
+        "impulse_peak_output_index": 1024,
+        "impulse_peak_available_input_delay_frames": 143,
+        "steady_input_minus_output_over_ratio_min": 143.190581,
+        "steady_input_minus_output_over_ratio_max": 143.80482,
+        "impulse_peak": 0.950267375
+      },
+      {
+        "mode": "Best Sinc Interpolator",
+        "output_per_input": 1.0001,
+        "block_frames": 32,
+        "first_output_after_input_frames": 160,
+        "first_call_output_frames": 17,
+        "first_B_output_after_input_frames": 192,
+        "impulse_peak_output_index": 1024,
+        "impulse_peak_available_input_delay_frames": 159,
+        "steady_input_minus_output_over_ratio_min": 143.193681,
+        "steady_input_minus_output_over_ratio_max": 143.80482,
+        "impulse_peak": 0.950267375
+      },
+      {
+        "mode": "Best Sinc Interpolator",
+        "output_per_input": 1.0001,
+        "block_frames": 64,
+        "first_output_after_input_frames": 192,
+        "first_call_output_frames": 49,
+        "first_B_output_after_input_frames": 256,
+        "impulse_peak_output_index": 1024,
+        "impulse_peak_available_input_delay_frames": 191,
+        "steady_input_minus_output_over_ratio_min": 143.19688,
+        "steady_input_minus_output_over_ratio_max": 143.80482,
+        "impulse_peak": 0.950267375
+      }
+    ],
+    "required": [
+      {
+        "mode": "Fastest Sinc Interpolator",
+        "output_per_input": 0.9999,
+        "target_output_frames": 32,
+        "minimum_input_frames": 52,
+        "actual_output_frames": 32
+      },
+      {
+        "mode": "Fastest Sinc Interpolator",
+        "output_per_input": 0.9999,
+        "target_output_frames": 64,
+        "minimum_input_frames": 84,
+        "actual_output_frames": 64
+      },
+      {
+        "mode": "Fastest Sinc Interpolator",
+        "output_per_input": 1.0,
+        "target_output_frames": 32,
+        "minimum_input_frames": 52,
+        "actual_output_frames": 32
+      },
+      {
+        "mode": "Fastest Sinc Interpolator",
+        "output_per_input": 1.0,
+        "target_output_frames": 64,
+        "minimum_input_frames": 84,
+        "actual_output_frames": 64
+      },
+      {
+        "mode": "Fastest Sinc Interpolator",
+        "output_per_input": 1.0001,
+        "target_output_frames": 32,
+        "minimum_input_frames": 51,
+        "actual_output_frames": 32
+      },
+      {
+        "mode": "Fastest Sinc Interpolator",
+        "output_per_input": 1.0001,
+        "target_output_frames": 64,
+        "minimum_input_frames": 83,
+        "actual_output_frames": 64
+      },
+      {
+        "mode": "Medium Sinc Interpolator",
+        "output_per_input": 0.9999,
+        "target_output_frames": 32,
+        "minimum_input_frames": 79,
+        "actual_output_frames": 32
+      },
+      {
+        "mode": "Medium Sinc Interpolator",
+        "output_per_input": 0.9999,
+        "target_output_frames": 64,
+        "minimum_input_frames": 111,
+        "actual_output_frames": 64
+      },
+      {
+        "mode": "Medium Sinc Interpolator",
+        "output_per_input": 1.0,
+        "target_output_frames": 32,
+        "minimum_input_frames": 79,
+        "actual_output_frames": 32
+      },
+      {
+        "mode": "Medium Sinc Interpolator",
+        "output_per_input": 1.0,
+        "target_output_frames": 64,
+        "minimum_input_frames": 111,
+        "actual_output_frames": 64
+      },
+      {
+        "mode": "Medium Sinc Interpolator",
+        "output_per_input": 1.0001,
+        "target_output_frames": 32,
+        "minimum_input_frames": 78,
+        "actual_output_frames": 32
+      },
+      {
+        "mode": "Medium Sinc Interpolator",
+        "output_per_input": 1.0001,
+        "target_output_frames": 64,
+        "minimum_input_frames": 110,
+        "actual_output_frames": 64
+      },
+      {
+        "mode": "Best Sinc Interpolator",
+        "output_per_input": 0.9999,
+        "target_output_frames": 32,
+        "minimum_input_frames": 176,
+        "actual_output_frames": 32
+      },
+      {
+        "mode": "Best Sinc Interpolator",
+        "output_per_input": 0.9999,
+        "target_output_frames": 64,
+        "minimum_input_frames": 208,
+        "actual_output_frames": 64
+      },
+      {
+        "mode": "Best Sinc Interpolator",
+        "output_per_input": 1.0,
+        "target_output_frames": 32,
+        "minimum_input_frames": 176,
+        "actual_output_frames": 32
+      },
+      {
+        "mode": "Best Sinc Interpolator",
+        "output_per_input": 1.0,
+        "target_output_frames": 64,
+        "minimum_input_frames": 208,
+        "actual_output_frames": 64
+      },
+      {
+        "mode": "Best Sinc Interpolator",
+        "output_per_input": 1.0001,
+        "target_output_frames": 32,
+        "minimum_input_frames": 175,
+        "actual_output_frames": 32
+      },
+      {
+        "mode": "Best Sinc Interpolator",
+        "output_per_input": 1.0001,
+        "target_output_frames": 64,
+        "minimum_input_frames": 207,
+        "actual_output_frames": 64
+      }
+    ],
+    "cpu": [
+      {
+        "mode": "Fastest Sinc Interpolator",
+        "block_frames": 32,
+        "iterations": 20000,
+        "mean_us": 1.70289,
+        "p50_us": 1.708333,
+        "p99_us": 1.791667,
+        "p99_9_us": 2.166667,
+        "max_us": 19.583333,
+        "total_output_frames": 640000,
+        "short_calls": 0
+      },
+      {
+        "mode": "Fastest Sinc Interpolator",
+        "block_frames": 64,
+        "iterations": 20000,
+        "mean_us": 3.356038,
+        "p50_us": 3.333333,
+        "p99_us": 3.458333,
+        "p99_9_us": 4.208333,
+        "max_us": 35.666667,
+        "total_output_frames": 1280000,
+        "short_calls": 0
+      },
+      {
+        "mode": "Medium Sinc Interpolator",
+        "block_frames": 32,
+        "iterations": 20000,
+        "mean_us": 3.070452,
+        "p50_us": 3.041667,
+        "p99_us": 3.208333,
+        "p99_9_us": 3.833333,
+        "max_us": 6.166667,
+        "total_output_frames": 640000,
+        "short_calls": 0
+      },
+      {
+        "mode": "Medium Sinc Interpolator",
+        "block_frames": 64,
+        "iterations": 20000,
+        "mean_us": 6.083288,
+        "p50_us": 6.083333,
+        "p99_us": 6.375,
+        "p99_9_us": 7.625,
+        "max_us": 12.75,
+        "total_output_frames": 1280000,
+        "short_calls": 0
+      },
+      {
+        "mode": "Best Sinc Interpolator",
+        "block_frames": 32,
+        "iterations": 20000,
+        "mean_us": 10.738602,
+        "p50_us": 10.708333,
+        "p99_us": 12.291667,
+        "p99_9_us": 13.416667,
+        "max_us": 39.625,
+        "total_output_frames": 640000,
+        "short_calls": 0
+      },
+      {
+        "mode": "Best Sinc Interpolator",
+        "block_frames": 64,
+        "iterations": 20000,
+        "mean_us": 21.482927,
+        "p50_us": 21.375,
+        "p99_us": 23.875,
+        "p99_9_us": 26.291667,
+        "max_us": 54.208333,
+        "total_output_frames": 1280000,
+        "short_calls": 0
+      }
+    ]
+  }
+}
