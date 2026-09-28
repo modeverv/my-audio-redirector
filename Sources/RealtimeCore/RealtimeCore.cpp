@@ -20,6 +20,7 @@ constexpr unsigned kMaximumProcessCalls = 8;
 static_assert(std::atomic<uint64_t>::is_always_lock_free, "RT atomics must be lock free");
 static_assert(std::atomic<double>::is_always_lock_free, "RT atomics must be lock free");
 static_assert(std::atomic<float>::is_always_lock_free, "RT atomics must be lock free");
+static_assert(std::atomic<int>::is_always_lock_free && std::atomic<bool>::is_always_lock_free, "RT diagnostic publication must be lock free");
 
 uint64_t pairBits(float l, float r) {
     uint32_t a, b; std::memcpy(&a, &l, 4); std::memcpy(&b, &r, 4);
@@ -30,6 +31,81 @@ void pairValues(uint64_t bits, float &l, float &r) {
     std::memcpy(&l, &a, 4); std::memcpy(&r, &b, 4);
 }
 float amplitude(float db) { return std::pow(10.0f, std::clamp(db, -144.0f, 24.0f) / 20.0f); }
+
+constexpr MRGateSettings kDefaultGate {1, -60, .2f, 50, 30, 6};
+bool validGate(const MRGateSettings &g) {
+    return (g.enabled == 0 || g.enabled == 1) &&
+        std::isfinite(g.thresholdDB) && g.thresholdDB >= -96 && g.thresholdDB <= 0 &&
+        std::isfinite(g.attackMS) && g.attackMS >= .1f && g.attackMS <= 50 &&
+        std::isfinite(g.holdMS) && g.holdMS >= 0 && g.holdMS <= 1000 &&
+        std::isfinite(g.releaseMS) && g.releaseMS >= 1 && g.releaseMS <= 2000 &&
+        std::isfinite(g.hysteresisDB) && g.hysteresisDB >= 0 && g.hysteresisDB <= 24;
+}
+// 10 threshold + 9 attack + 10 hold + 11 release + 8 hysteresis + 1 enabled
+// bits. Quantization is part of the C API contract, not a torn-field snapshot.
+uint64_t gateBits(const MRGateSettings &g) {
+    return uint64_t(std::lround((g.thresholdDB + 96) * 10)) |
+        (uint64_t(std::lround(g.attackMS * 10)) << 10) |
+        (uint64_t(std::lround(g.holdMS)) << 19) |
+        (uint64_t(std::lround(g.releaseMS)) << 29) |
+        (uint64_t(std::lround(g.hysteresisDB * 10)) << 40) |
+        (uint64_t(g.enabled != 0) << 48);
+}
+
+// Producer-owned detector/envelope. No buffering, allocation, locks, RMS
+// window, or transcendental work per sample. Input is checked finite first.
+struct Gate {
+    uint64_t applied = UINT64_MAX;
+    bool enabled = true, opened = false, hasSamples = false;
+    float opening = 0, closing = 0, gain = 0, target = 0, step = 0, rampStart = 0;
+    uint32_t attack = 0, hold = 0, release = 0, held = 0, remaining = 0, rampLength = 0;
+
+    void rampTo(float value, uint32_t frames) {
+        target = value;
+        if (gain == target) { remaining = 0; step = 0; return; }
+        rampStart = gain; remaining = rampLength = frames;
+        step = (target - gain) / float(frames);
+    }
+    void configure(uint64_t bits, double rate) {
+        if (bits == applied) return;
+        const bool wasEnabled = enabled;
+        enabled = (bits >> 48) & 1;
+        const float threshold = float(bits & 1023) / 10 - 96;
+        const float hysteresis = float((bits >> 40) & 255) / 10;
+        opening = amplitude(threshold); closing = amplitude(threshold - hysteresis);
+        attack = std::max(1u, uint32_t(std::lround(double((bits >> 10) & 511) * rate / 10000)));
+        hold = uint32_t(std::lround(double((bits >> 19) & 1023) * rate / 1000));
+        release = std::max(1u, uint32_t(std::lround(double((bits >> 29) & 2047) * rate / 1000)));
+        if (!hasSamples) {
+            opened = !enabled; gain = target = enabled ? 0 : 1; remaining = held = 0; step = 0;
+        } else if (!enabled) {
+            opened = true; held = 0; rampTo(1, attack);
+        } else {
+            if (!wasEnabled) { opened = true; held = hold; }
+            else held = std::min(held, hold);
+            if (remaining) rampTo(target, target > gain ? attack : release);
+        }
+        applied = bits;
+    }
+    float next(float level) {
+        hasSamples = true;
+        if (enabled) {
+            if (opened) {
+                if (level >= closing) held = hold;
+                else if (held) --held;
+                else { opened = false; rampTo(0, release); }
+            } else if (level >= opening) {
+                opened = true; held = hold; rampTo(1, attack);
+            }
+        }
+        if (remaining) {
+            --remaining;
+            gain = remaining ? std::clamp(rampStart + step * float(rampLength - remaining), 0.0f, 1.0f) : target;
+        }
+        // Exact endpoints avoid denormal tails after closing.
+        return gain;
+    }
+};
 
 struct Ramp {
     float current = 0, target = 0, step = 0;
@@ -53,12 +129,12 @@ struct ClockTracker {
     double previousSample = 0, previousHost = 0, anchorSample = 0, anchorHost = 0;
     uint32_t previousFrames = 0;
     double rate = 48000;
-    bool observe(MRTime t, uint32_t frames, double nominal) {
-        if (!t.valid) { previousValid = false; return true; }
-        if (!std::isfinite(t.sampleTime) || !std::isfinite(t.hostSeconds)) return false;
+    uint32_t observe(MRTime t, uint32_t frames, double nominal) {
+        if (!t.valid) { previousValid = false; return 0; }
+        if (!std::isfinite(t.sampleTime) || !std::isfinite(t.hostSeconds)) return MR_CLOCK_NONFINITE_TIMESTAMP;
         if (previousValid) {
-            if (std::abs(t.sampleTime - previousSample - previousFrames) > 0.5 ||
-                t.hostSeconds <= previousHost) return false;
+            if (std::abs(t.sampleTime - previousSample - previousFrames) > 0.5) return MR_CLOCK_SAMPLE_TIME_GAP;
+            if (t.hostSeconds <= previousHost) return MR_CLOCK_HOST_TIME_NONINCREASING;
             const double elapsed = t.hostSeconds - anchorHost;
             if (elapsed >= 0.25) {
                 const double measured = (t.sampleTime - anchorSample) / elapsed;
@@ -71,18 +147,22 @@ struct ClockTracker {
         } else { anchorSample = t.sampleTime; anchorHost = t.hostSeconds; }
         previousSample = t.sampleTime; previousHost = t.hostSeconds;
         previousFrames = frames; previousValid = true;
-        return true;
+        return 0;
     }
 };
 
 struct Channel {
     std::atomic<uint64_t> coefficients { pairBits(0, 0) };
+    std::atomic<uint64_t> gateCommand { gateBits(kDefaultGate) };
     Ramp left, right;
+    Gate gate;
     std::atomic<float> peak { 0 };
+    std::atomic<float> gateGain { 0 };
 };
 
 struct Source {
     uint32_t channels = 0, target = 0, capacity = 0, mask = 0;
+    uint32_t gateLinks = 0; // immutable after the first producer callback
     std::unique_ptr<float[]> ring, mix;
     alignas(64) std::atomic<uint64_t> written { 0 };
     alignas(64) std::atomic<uint64_t> read { 0 };
@@ -119,6 +199,9 @@ struct MRCore {
     std::array<Source, 3> source;
     std::array<Destination, 2> destination;
     std::atomic<int> fault { 0 };
+    std::atomic<int> clockFailureOwner { -1 };
+    std::atomic<bool> clockFailureReady { false };
+    MRClockFailure clockFailure {};
     std::atomic<uint32_t> primedMask { 0 };
     std::atomic<uint64_t> nonFinite { 0 }, clipped { 0 };
     std::atomic<uint64_t> masters { pairBits(1, 0) };
@@ -127,6 +210,26 @@ struct MRCore {
     void fail(int code) {
         int expected = 0;
         fault.compare_exchange_strong(expected, code, std::memory_order_relaxed);
+    }
+
+    void failClock(uint32_t tracker, uint32_t reason, const ClockTracker &clock, MRTime current) {
+        int expected = -1;
+        if (clockFailureOwner.compare_exchange_strong(expected, int(tracker), std::memory_order_relaxed)) {
+            // Exactly one callback writes this record. Snapshot cannot read
+            // it until the release/acquire publication, and it never changes
+            // afterward. No snapshot retry loop, allocation, or RT wait.
+            clockFailure.valid = 1;
+            clockFailure.previousValid = clock.previousValid ? 1 : 0;
+            clockFailure.tracker = tracker; clockFailure.reason = reason;
+            clockFailure.previousSampleTime = clock.previousSample;
+            clockFailure.expectedSampleTime = clock.previousSample + clock.previousFrames;
+            clockFailure.currentSampleTime = current.sampleTime;
+            clockFailure.previousHostSeconds = clock.previousHost;
+            clockFailure.currentHostSeconds = current.hostSeconds;
+            clockFailure.previousFrames = clock.previousFrames;
+            clockFailureReady.store(true, std::memory_order_release);
+        }
+        fail(discontinuity);
     }
 
     bool convert(unsigned index, float *out, uint32_t frames, double outputRate) {
@@ -226,6 +329,9 @@ extern "C" MRCore *mr_core_create(const MRCoreConfig *config, char *error, size_
         for (unsigned i = 0; i < 3; ++i) {
             auto &s = core->source[i];
             s.channels = config->channels[i]; s.target = config->fifoTarget[i];
+            s.gateLinks = i == 2 ? 1u : 0u;
+            for (uint32_t c = 0; c < s.channels; ++c)
+                s.channel[c].gate.configure(s.channel[c].gateCommand.load(std::memory_order_relaxed), config->sampleRate);
             // Capacity tolerates asynchronous device startup. It is NOT the
             // target latency; the consumer trims excess once when priming.
             uint32_t capacity = 32768;
@@ -270,6 +376,26 @@ extern "C" void mr_core_set_master(MRCore *core, float forwardDB, float returnDB
     core->masters.store(pairBits(amplitude(forwardDB), returnMuted ? 0 : amplitude(returnDB)), std::memory_order_relaxed);
 }
 
+extern "C" void mr_core_set_gate(MRCore *core, uint32_t source, uint32_t channel, const MRGateSettings *settings) {
+    if (!core) return;
+    if (source >= 3 || channel >= core->source[source].channels || !settings || !validGate(*settings)) {
+        core->fail(badArgument); return;
+    }
+    core->source[source].channel[channel].gateCommand.store(gateBits(*settings), std::memory_order_relaxed);
+}
+
+extern "C" void mr_core_set_gate_link(MRCore *core, uint32_t source, uint32_t pairStart, int linked) {
+    if (!core) return;
+    if (source >= 3 || (pairStart & 1) || pairStart >= MR_MAX_CHANNELS - 1 ||
+        pairStart + 1 >= core->source[source].channels ||
+        core->source[source].pushes.load(std::memory_order_relaxed) != 0 || (linked != 0 && linked != 1)) {
+        core->fail(badArgument); return;
+    }
+    const uint32_t mask = 1u << (pairStart / 2);
+    auto &links = core->source[source].gateLinks;
+    if (linked) links |= mask; else links &= ~mask;
+}
+
 extern "C" void mr_core_push(MRCore *core, uint32_t index, const MRChannelView *views, uint32_t channels, uint32_t frames, MRTime time) {
     if (!core || core->fault.load(std::memory_order_relaxed)) return;
     if (index >= 3 || !frames || frames > core->config.maxFrames || channels != core->source[index].channels || (channels && !views)) {
@@ -277,7 +403,7 @@ extern "C" void mr_core_push(MRCore *core, uint32_t index, const MRChannelView *
     }
     auto &s = core->source[index];
     s.pushes.fetch_add(1, std::memory_order_relaxed); s.frames.fetch_add(frames, std::memory_order_relaxed);
-    if (!s.inputClock.observe(time, frames, core->config.sampleRate)) { core->fail(discontinuity); return; }
+    if (uint32_t reason = s.inputClock.observe(time, frames, core->config.sampleRate)) { core->failClock(index, reason, s.inputClock, time); return; }
     s.inputRate.store(s.inputClock.rate, std::memory_order_relaxed);
     if (!channels) return;
     for (uint32_t c = 0; c < channels; ++c) {
@@ -287,21 +413,41 @@ extern "C" void mr_core_push(MRCore *core, uint32_t index, const MRChannelView *
     const uint64_t r = s.read.load(std::memory_order_acquire);
     if (w - r + frames > s.capacity) { s.overflows.fetch_add(1, std::memory_order_relaxed); core->fail(overflow); return; }
     std::fill_n(s.mix.get(), size_t(frames) * 2, 0.0f);
-    for (uint32_t c = 0; c < channels; ++c) {
-        auto &channel = s.channel[c]; float peak = 0;
-        float l, rr; pairValues(channel.coefficients.load(std::memory_order_relaxed), l, rr);
-        channel.left.set(l, core->rampFrames); channel.right.set(rr, core->rampFrames);
+    for (uint32_t c = 0; c < channels;) {
+        const bool linked = !(c & 1) && c + 1 < channels && (s.gateLinks & (1u << (c / 2)));
+        const uint32_t count = linked ? 2 : 1;
+        auto &gate = s.channel[c].gate;
+        gate.configure(s.channel[c].gateCommand.load(std::memory_order_relaxed), core->config.sampleRate);
+        float peak[2] = {0, 0};
+        for (uint32_t n = 0; n < count; ++n) {
+            auto &channel = s.channel[c + n];
+            float l, rr; pairValues(channel.coefficients.load(std::memory_order_relaxed), l, rr);
+            channel.left.set(l, core->rampFrames); channel.right.set(rr, core->rampFrames);
+        }
         for (uint32_t f = 0; f < frames; ++f) {
-            const float sample = views[c].data[size_t(f) * views[c].stride];
-            if (!std::isfinite(sample)) { core->nonFinite.fetch_add(1, std::memory_order_relaxed); core->fail(nonFiniteAudio); return; }
-            peak = std::max(peak, std::abs(sample));
-            if (index == 2) s.mix[f * 2 + c] = sample;
-            else {
-                s.mix[f * 2] += sample * channel.left.next();
-                s.mix[f * 2 + 1] += sample * channel.right.next();
+            float samples[2], detector = 0;
+            for (uint32_t n = 0; n < count; ++n) {
+                samples[n] = views[c + n].data[size_t(f) * views[c + n].stride];
+                if (!std::isfinite(samples[n])) { core->nonFinite.fetch_add(1, std::memory_order_relaxed); core->fail(nonFiniteAudio); return; }
+                const float magnitude = std::abs(samples[n]);
+                peak[n] = std::max(peak[n], magnitude); detector = std::max(detector, magnitude);
+            }
+            const float gain = gate.next(detector);
+            for (uint32_t n = 0; n < count; ++n) {
+                auto &channel = s.channel[c + n];
+                const float sample = gain == 0 ? 0 : samples[n] * gain;
+                if (index == 2) s.mix[f * 2 + c + n] = sample;
+                else {
+                    s.mix[f * 2] += sample * channel.left.next();
+                    s.mix[f * 2 + 1] += sample * channel.right.next();
+                }
             }
         }
-        channel.peak.store(peak, std::memory_order_relaxed);
+        for (uint32_t n = 0; n < count; ++n) {
+            s.channel[c + n].peak.store(peak[n], std::memory_order_relaxed);
+            s.channel[c + n].gateGain.store(gate.gain, std::memory_order_relaxed);
+        }
+        c += count;
     }
     for (uint32_t f = 0; f < frames; ++f) {
         if (!std::isfinite(s.mix[f * 2]) || !std::isfinite(s.mix[f * 2 + 1])) {
@@ -323,7 +469,7 @@ extern "C" void mr_core_render(MRCore *core, uint32_t index, float *out, uint32_
     auto &d = core->destination[index];
     d.renders.fetch_add(1, std::memory_order_relaxed); d.frames.fetch_add(frames, std::memory_order_relaxed);
     if (core->fault.load(std::memory_order_relaxed)) { d.peak.store(0, std::memory_order_relaxed); return; }
-    if (!d.outputClock.observe(time, frames, core->config.sampleRate)) { core->fail(discontinuity); return; }
+    if (uint32_t reason = d.outputClock.observe(time, frames, core->config.sampleRate)) { core->failClock(3 + index, reason, d.outputClock, time); return; }
     bool ready;
     if (index == 0) {
         ready = core->convert(0, out, frames, d.outputClock.rate);
@@ -362,7 +508,10 @@ extern "C" void mr_core_snapshot(MRCore *core, MRCoreStats *out) {
         out->fifoFrames[i] = uint32_t(std::min(w - r, uint64_t(s.capacity)));
         uint32_t low = s.minimum.load(std::memory_order_relaxed); out->fifoMin[i] = low == UINT32_MAX ? 0 : low;
         out->fifoMax[i] = s.maximum.load(std::memory_order_relaxed); out->correctionPPM[i] = s.ppm.load(std::memory_order_relaxed);
-        for (unsigned c = 0; c < s.channels; ++c) out->inputPeak[i][c] = s.channel[c].peak.load(std::memory_order_relaxed);
+        for (unsigned c = 0; c < s.channels; ++c) {
+            out->inputPeak[i][c] = s.channel[c].peak.load(std::memory_order_relaxed);
+            out->gateGain[i][c] = s.channel[c].gateGain.load(std::memory_order_relaxed);
+        }
     }
     for (unsigned i = 0; i < 2; ++i) {
         auto &d = core->destination[i]; out->renders[i] = d.renders.load(std::memory_order_relaxed);
@@ -370,4 +519,5 @@ extern "C" void mr_core_snapshot(MRCore *core, MRCoreStats *out) {
     }
     out->primedMask = core->primedMask.load(std::memory_order_acquire); out->fault = core->fault.load(std::memory_order_relaxed);
     out->nonFinite = core->nonFinite.load(std::memory_order_relaxed); out->clipped = core->clipped.load(std::memory_order_relaxed);
+    if (core->clockFailureReady.load(std::memory_order_acquire)) out->clockFailure = core->clockFailure;
 }

@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <chrono>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -40,9 +41,18 @@ MRCoreConfig config(uint32_t block = 64, int quality = 0, uint32_t target = 64) 
     c.fifoTarget[0] = c.fifoTarget[1] = c.fifoTarget[2] = target;
     c.maxFrames = block; c.sampleRate = 48000; c.quality = quality; return c;
 }
-Core create(MRCoreConfig c = config()) {
+MRGateSettings gateSettings(bool enabled = true) { return {enabled ? 1 : 0, -60, .2f, 50, 30, 6}; }
+Core create(MRCoreConfig c = config(), bool gatesEnabled = false) {
     char error[256]; Core core(mr_core_create(&c, error, sizeof(error)));
     if (!core) throw std::runtime_error(error);
+    // The existing routing/drift tests explicitly bypass gates so their source
+    // waveforms remain unchanged. Gate behavior has separate tests below.
+    if (!gatesEnabled) {
+        const auto gate = gateSettings(false);
+        for (unsigned source = 0; source < 3; ++source)
+            for (unsigned channel = 0; channel < c.channels[source]; ++channel)
+                mr_core_set_gate(core.get(), source, channel, &gate);
+    }
     return core;
 }
 MRCoreStats stats(MRCore *c) { MRCoreStats s {}; mr_core_snapshot(c, &s); return s; }
@@ -73,6 +83,190 @@ void enable(MRCore *c) {
 }
 void cycle(MRCore *c, Signals &x) { for(unsigned s=0;s<3;++s)x.push(c,s); x.render(c,0);x.render(c,1); }
 bool silent(const std::vector<float> &x) { return std::all_of(x.begin(),x.end(),[](float f){return f==0;}); }
+
+void pushGateBlock(MRCore *core, unsigned source, const float *left, const float *right, unsigned frames) {
+    MRChannelView views[2] = {{left,1},{right,1}};
+    Guard guard; mr_core_push(core, source, views, 2, frames, {});
+}
+void pushGateConstant(MRCore *core, unsigned source, float left, float right, unsigned frames) {
+    std::array<float,64> l, r; l.fill(left); r.fill(right);
+    while (frames) { const unsigned n=std::min(frames,64u);pushGateBlock(core,source,l.data(),r.data(),n);frames-=n; }
+}
+
+void gateEnvelopeAndBlockBoundaries() {
+    const MRGateSettings gate {1,-60,.5f,2,3,6}; // attack24 / hold96 / release144 samples
+    std::vector<float> input(100,.0001f);
+    input.insert(input.end(),37,.01f);
+    input.insert(input.end(),75,.00075f); // hysteresis band, stays open after crossing
+    input.insert(input.end(),260,.0001f);
+    input.insert(input.end(),71,.00075f); // same band while closed must NOT open
+    input.insert(input.end(),47,.01f);
+    std::vector<float> right(input.size(),0), reference;
+    auto core=create(config(),true);
+    mr_core_set_gate(core.get(),0,0,&gate);
+    for (size_t i=0;i<input.size();++i) {
+        pushGateBlock(core.get(),0,&input[i],&right[i],1);
+        reference.push_back(stats(core.get()).gateGain[0][0]);
+    }
+    require(reference[99]==0 && reference[100]>0 && reference[100]<1,"gate added lookahead or hard-switched attack");
+    require(std::abs(reference[100]-1.f/24)<1e-6 && reference[123]==1,"gate attack sample count wrong");
+    require(reference[211]==1 && reference[307]==1 && reference[308]<1,"hysteresis or hold sample count wrong");
+    require(reference[450]>0 && reference[451]==0 && reference[542]==0,"release endpoint or closed hysteresis failed");
+    for(unsigned source=0;source<3;++source)for(unsigned block:{16u,32u,64u}) {
+        auto c=create(config(),true);
+        if(source==2)mr_core_set_gate_link(c.get(),2,0,0);
+        mr_core_set_gate(c.get(),source,0,&gate);
+        for(size_t i=0;i<input.size();) {
+            const auto n=unsigned(std::min(size_t(block),input.size()-i));
+            pushGateBlock(c.get(),source,input.data()+i,right.data()+i,n);i+=n;
+            const auto s=stats(c.get());
+            require(!s.fault && s.gateGain[source][0]==reference[i-1],"gate envelope changed at callback boundary");
+            require(s.gateGain[source][1]==0,"independent silent channel gate opened");
+        }
+    }
+    std::puts("PASS gate threshold/hysteresis, sample-exact attack/hold/release and 16/32/64 block continuity");
+}
+
+void gateStereoLinks() {
+    for(unsigned source=0;source<3;++source)for(bool linked:{false,true}) {
+        auto core=create(config(),true);
+        mr_core_set_gate_link(core.get(),source,0,linked);
+        auto first=gateSettings();first.thresholdDB=-30;first.holdMS=0;first.releaseMS=1;
+        auto second=first;second.thresholdDB=0; // Linked detector MUST use first settings.
+        mr_core_set_gate(core.get(),source,0,&first);mr_core_set_gate(core.get(),source,1,&second);
+        pushGateConstant(core.get(),source,.1f,.0001f,32);
+        auto s=stats(core.get());
+        require(!s.fault && s.gateGain[source][0]==1 && s.gateGain[source][1]==(linked?1:0),"stereo gate linking or first settings failed");
+        for(unsigned n=0;n<48;++n) {
+            pushGateConstant(core.get(),source,0,0,1);s=stats(core.get());
+            if(linked)require(s.gateGain[source][0]==s.gateGain[source][1],"linked stereo image changed during release");
+        }
+        require(s.gateGain[source][0]==0 && s.gateGain[source][1]==0,"linked/independent gate did not fully close");
+        // The right side also drives a linked detector even when the left is silent.
+        pushGateConstant(core.get(),source,0,.1f,32);s=stats(core.get());
+        require(s.gateGain[source][0]==(linked?1:0) && s.gateGain[source][1]==(linked?1:0),"right-side max detector failed");
+    }
+    auto core=create(config(),true);pushGateConstant(core.get(),2,.1f,.0001f,32);
+    require(stats(core.get()).gateGain[2][1]==1,"return gate default must be linked");
+    std::puts("PASS per-source stereo max detector, common gain, first-channel settings and linked return default");
+}
+
+void gateSignalAndBypass() {
+    for(unsigned block:{16u,32u,64u}) {
+        auto core=create(config(block,0,block),true);Signals x(block);enable(core.get());
+        for(auto &v:x.data)std::fill(v.begin(),v.end(),.0001f);
+        for(unsigned s=0;s<2;++s)for(unsigned c=0;c<2;++c)mr_core_set_channel(core.get(),s,c,24,c?1:-1,0);
+        for(unsigned n=0;n<100;++n)cycle(core.get(),x);
+        auto s=stats(core.get());
+        require(!s.fault&&s.primedMask==7&&silent(x.forward)&&silent(x.back),"default gate did not close to exact zero before gain/pan");
+        require(s.inputPeak[0][0]==.0001f&&s.gateGain[0][0]==0,"raw metering was gated or gain meter incorrect");
+        // Gate OFF restores below-threshold audio, while other channels stay closed.
+        auto bypass=gateSettings(false);mr_core_set_gate(core.get(),0,0,&bypass);
+        mr_core_set_gate(core.get(),2,0,&bypass); // default linked return uses first settings
+        for(unsigned n=0;n<100;++n)cycle(core.get(),x);
+        s=stats(core.get());
+        require(!s.fault&&x.forward[block]>.001f&&std::abs(x.forward[block+1])<1e-12,"bypass or channel isolation failed");
+        require(std::abs(x.back[block]-.0001f)<1e-7&&std::abs(x.back[block+1]-.0001f)<1e-7,"return gate bypass did not preserve stereo");
+        require(s.gateGain[0][0]==1&&s.gateGain[0][1]==0&&s.gateGain[2][1]==1,"bypass gain telemetry incorrect");
+        auto enabled=gateSettings();enabled.holdMS=0;enabled.releaseMS=1;
+        mr_core_set_gate(core.get(),0,0,&enabled);mr_core_set_gate(core.get(),2,0,&enabled);
+        for(unsigned n=0;n<100;++n)cycle(core.get(),x);
+        require(silent(x.forward)&&silent(x.back)&&!stats(core.get()).fault,"gate re-enable did not reach exact silence through ASRC");
+    }
+    // Initial bypass is exactly unity, rather than imposing a gate attack.
+    auto core=create(config());pushGateConstant(core.get(),0,.0001f,0,1);
+    require(stats(core.get()).gateGain[0][0]==1,"initial Gate OFF was not an exact bypass");
+    std::puts("PASS default noise suppression before gain/pan, exact-zero outputs, bypass and live enable");
+}
+
+void gateFailures() {
+    for(unsigned field=0;field<6;++field) {
+        auto core=create(config(),true);auto g=gateSettings();
+        switch(field) {
+        case 0:g.enabled=2;break;
+        case 1:g.thresholdDB=-97;break;
+        case 2:g.attackMS=0;break;
+        case 3:g.holdMS=1001;break;
+        case 4:g.releaseMS=2001;break;
+        default:g.hysteresisDB=std::numeric_limits<float>::quiet_NaN();break;
+        }
+        mr_core_set_gate(core.get(),0,0,&g);require(stats(core.get()).fault==1,"invalid gate settings accepted");
+    }
+    {auto core=create(config(),true);const float l=0,r=std::numeric_limits<float>::infinity();pushGateBlock(core.get(),2,&l,&r,1);
+     require(stats(core.get()).fault==5&&stats(core.get()).nonFinite==1,"closed linked gate hid nonfinite audio");}
+    {auto core=create(config(),true);mr_core_set_gate_link(core.get(),0,1,1);require(stats(core.get()).fault==1,"odd gate pair accepted");}
+    {auto core=create(config(),true);pushGateConstant(core.get(),0,0,0,1);mr_core_set_gate_link(core.get(),0,0,1);
+     require(stats(core.get()).fault==1,"live gate structure change accepted");}
+    std::puts("PASS gate parameter bounds, nonfinite fail-closed and stopped-only link changes");
+}
+
+void gateLongEnvelopeAndLiveChanges() {
+    auto core=create(config(32,0,32),true);Signals x(32);enable(core.get());
+    for(auto &v:x.data)std::fill(v.begin(),v.end(),0);
+    for(unsigned f=0;f<32;++f)x.data[0][2*f]=.01f;
+    MRGateSettings gate{1,-60,50,1000,2000,24};
+    mr_core_set_gate(core.get(),0,0,&gate);
+    for(unsigned n=0;n<100;++n)cycle(core.get(),x);
+    require(stats(core.get()).gateGain[0][0]==1,"maximum attack did not reach unity");
+    std::fill(x.data[0].begin(),x.data[0].end(),0);
+    float previous=1;
+    for(unsigned n=0;n<4500;++n) {
+        cycle(core.get(),x);const auto s=stats(core.get());const float gain=s.gateGain[0][0];
+        require(!s.fault&&std::isfinite(gain)&&gain>=0&&gain<=previous,"long gate envelope drifted outside 0..1 or was not monotonic");
+        if(n<1500)require(gain==1,"maximum hold duration was shortened");
+        previous=gain;
+    }
+    require(previous==0,"maximum release did not close at exact sample endpoint");
+    auto c=create(config(),true);
+    pushGateConstant(c.get(),0,.0001f,0,32);require(stats(c.get()).gateGain[0][0]==0,"live change fixture was not closed");
+    gate={1,-96,1,0,1,6};mr_core_set_gate(c.get(),0,0,&gate);
+    pushGateConstant(c.get(),0,.0001f,0,1);float first=stats(c.get()).gateGain[0][0];
+    require(first>0&&first<.03f,"live threshold update did not begin a smooth immediate attack");
+    gate.attackMS=2;mr_core_set_gate(c.get(),0,0,&gate);pushGateConstant(c.get(),0,.0001f,0,1);
+    require(stats(c.get()).gateGain[0][0]>first&&stats(c.get()).gateGain[0][0]-first<.02f,"live attack update stepped the envelope");
+    std::puts("PASS maximum envelope times, bounded monotonic release and smooth live settings updates");
+}
+
+void gates() { gateEnvelopeAndBlockBoundaries();gateStereoLinks();gateSignalAndBypass();gateFailures();gateLongEnvelopeAndLiveChanges(); }
+
+void gateBenchmark() {
+    using Clock=std::chrono::steady_clock;
+    for(unsigned block:{16u,32u,64u})for(bool enabled:{false,true}) {
+        auto cfg=config(block,0,block*2);cfg.channels[0]=cfg.channels[1]=20;
+        auto core=create(cfg,enabled);
+        std::array<std::vector<float>,3> data;
+        std::array<std::array<MRChannelView,MR_MAX_CHANNELS>,3> views{};
+        std::array<std::vector<double>,3> times;
+        std::vector<float> forward(block*2),back(block*2);
+        for(unsigned s=0;s<3;++s) {
+            data[s].resize(block*cfg.channels[s],.005f);times[s].reserve(30000);
+            for(unsigned c=0;c<cfg.channels[s];++c) {
+                views[s][c]={data[s].data()+c,cfg.channels[s]};
+                if(s<2)mr_core_set_channel(core.get(),s,c,0,c%2?1:-1,0);
+            }
+        }
+        mr_core_set_master(core.get(),0,0,0);
+        for(unsigned n=0;n<31000;++n) {
+            if(n%250==0)for(auto &samples:data)std::fill(samples.begin(),samples.end(),n%500?.00001f:.005f);
+            auto started=Clock::now();
+            {Guard g;mr_core_push(core.get(),0,views[0].data(),20,block,{});mr_core_render(core.get(),1,back.data(),block,{});}
+            auto ended=Clock::now();if(n>=1000)times[0].push_back(std::chrono::duration<double,std::micro>(ended-started).count());
+            started=Clock::now();
+            {Guard g;mr_core_push(core.get(),1,views[1].data(),20,block,{});}
+            ended=Clock::now();if(n>=1000)times[1].push_back(std::chrono::duration<double,std::micro>(ended-started).count());
+            started=Clock::now();
+            {Guard g;mr_core_push(core.get(),2,views[2].data(),2,block,{});mr_core_render(core.get(),0,forward.data(),block,{});}
+            ended=Clock::now();if(n>=1000)times[2].push_back(std::chrono::duration<double,std::micro>(ended-started).count());
+        }
+        require(!stats(core.get()).fault&&stats(core.get()).primedMask==7,"gate benchmark faulted");
+        const char *names[] = {"RME","PC","D4"};
+        for(unsigned s=0;s<3;++s) {
+            auto &t=times[s];double sum=0;for(auto v:t)sum+=v;std::sort(t.begin(),t.end());
+            std::printf("BENCH Gate%s B%u 20+20+2 %s us mean=%.3f p50=%.3f p99=%.3f max=%.3f callbacks=%zu\n",enabled?"ON":"OFF",block,names[s],sum/t.size(),t[t.size()/2],t[t.size()*99/100],t.back(),t.size());
+        }
+    }
+    std::puts("Offline CPU timings only: no hardware I/O, scheduling deadline, or end-to-end latency claim.");
+}
 
 void initializationAndPriming() {
     auto c=config(); c.sampleRate=44100; char error[256];
@@ -126,6 +320,96 @@ void faults() {
       x.render(core.get(),0,timeAt(192,48000));require(stats(core.get()).fault==6,"output discontinuity not detected"); }
     { auto core=create();Signals x(64);MRTime t={0,std::numeric_limits<double>::infinity(),1};x.push(core.get(),2,t);
       require(stats(core.get()).fault==6,"nonfinite timestamp accepted"); }
+}
+
+void clockDiagnosticCall(Signals &signals, MRCore *core, unsigned tracker, MRTime time) {
+    if (tracker < 3) signals.push(core, tracker, time);
+    else signals.render(core, tracker - 3, time);
+}
+
+void clockFailureDiagnostics() {
+    for (unsigned block : {16u, 32u, 64u}) for (unsigned tracker = 0; tracker < 5; ++tracker) {
+        for (double extra : {112., .50001, -200.}) {
+            auto core = create(config(block, 0, block)); Signals x(block);
+            require(!stats(core.get()).clockFailure.valid, "new core has a clock failure record");
+            const MRTime first{1000.25, 10, 1}, next{first.sampleTime + block + extra, 10.01, 1};
+            clockDiagnosticCall(x, core.get(), tracker, first);
+            clockDiagnosticCall(x, core.get(), tracker, next);
+            const auto s = stats(core.get()); const auto &f = s.clockFailure;
+            require(s.fault == 6 && f.valid && f.previousValid && f.tracker == tracker &&
+                f.reason == MR_CLOCK_SAMPLE_TIME_GAP && f.previousFrames == block &&
+                f.previousSampleTime == first.sampleTime && f.expectedSampleTime == first.sampleTime + block &&
+                f.currentSampleTime == next.sampleTime && f.previousHostSeconds == first.hostSeconds &&
+                f.currentHostSeconds == next.hostSeconds, "clock gap diagnostic identity or samples are incorrect");
+            // A later callback cannot overwrite the first fault, even if it
+            // has another tracker/reason. Both outputs remain fail silent.
+            clockDiagnosticCall(x, core.get(), (tracker + 1) % 5, {0, -10, 1});
+            x.render(core.get(), 0); x.render(core.get(), 1);
+            const auto later = stats(core.get()).clockFailure;
+            require(later.tracker == tracker && later.reason == f.reason && later.currentSampleTime == f.currentSampleTime &&
+                silent(x.forward) && silent(x.back), "clock failure changed after latching or did not silence");
+        }
+        for (double hostDelta : {0., -.01}) {
+            auto core = create(config(block, 0, block)); Signals x(block);
+            clockDiagnosticCall(x, core.get(), tracker, {100, 10, 1});
+            clockDiagnosticCall(x, core.get(), tracker, {100. + block, 10 + hostDelta, 1});
+            const auto f = stats(core.get()).clockFailure;
+            require(f.valid && f.tracker == tracker && f.reason == MR_CLOCK_HOST_TIME_NONINCREASING &&
+                f.currentSampleTime == f.expectedSampleTime && f.currentHostSeconds == 10 + hostDelta,
+                "non-increasing host time diagnostic is incorrect");
+        }
+        for (bool previous : {false, true}) for (bool badHost : {false, true}) {
+            auto core = create(config(block, 0, block)); Signals x(block);
+            if (previous) clockDiagnosticCall(x, core.get(), tracker, {100, 10, 1});
+            const MRTime invalid{badHost ? 100. + block : std::numeric_limits<double>::quiet_NaN(),
+                                 badHost ? std::numeric_limits<double>::infinity() : 10.01, 1};
+            clockDiagnosticCall(x, core.get(), tracker, invalid);
+            const auto s = stats(core.get()); const auto &f = s.clockFailure;
+            require(s.fault == 6 && f.valid && f.tracker == tracker && f.previousValid == int(previous) &&
+                f.reason == MR_CLOCK_NONFINITE_TIMESTAMP && (badHost ? std::isinf(f.currentHostSeconds) : std::isnan(f.currentSampleTime)),
+                "nonfinite timestamp diagnostic lost invalid data or previous-valid state");
+        }
+        // Preserve the existing tolerance and valid-flag behavior exactly.
+        auto core = create(config(block, 0, block)); Signals x(block);
+        clockDiagnosticCall(x, core.get(), tracker, {100, 10, 1});
+        clockDiagnosticCall(x, core.get(), tracker, {100.5 + block, 10.01, 1});
+        clockDiagnosticCall(x, core.get(), tracker, {});
+        clockDiagnosticCall(x, core.get(), tracker, {-10000, 20, 1});
+        require(!stats(core.get()).fault && !stats(core.get()).clockFailure.valid, "clock diagnostic changed acceptance criteria");
+    }
+    std::puts("PASS all five clock identities, exact first-failure values/reasons, immutable record and unchanged timestamp acceptance");
+}
+
+void concurrentClockFailureDiagnostics() {
+    for (unsigned repetition = 0; repetition < 100; ++repetition) {
+        auto core = create(); Signals x(64);
+        for (unsigned tracker = 0; tracker < 5; ++tracker)
+            clockDiagnosticCall(x, core.get(), tracker, {1000. + tracker * 100, 100. + tracker, 1});
+        std::atomic<bool> start{false}; std::atomic<unsigned> finished{0};
+        std::array<std::thread, 5> callbacks;
+        for (unsigned tracker = 0; tracker < 5; ++tracker) callbacks[tracker] = std::thread([&, tracker] {
+            while (!start.load(std::memory_order_acquire)) std::this_thread::yield();
+            clockDiagnosticCall(x, core.get(), tracker, {1000. + tracker * 100 + 64 + tracker + 1, 100.01 + tracker, 1});
+            finished.fetch_add(1, std::memory_order_release);
+        });
+        bool coherent = true; int firstTracker = -1;
+        auto check = [&](const MRClockFailure &f) {
+            if (!f.valid) return;
+            const unsigned tracker = f.tracker;
+            coherent = coherent && tracker < 5 && f.previousValid && f.reason == MR_CLOCK_SAMPLE_TIME_GAP &&
+                f.previousFrames == 64 && f.previousSampleTime == 1000. + tracker * 100 &&
+                f.expectedSampleTime == 1064. + tracker * 100 && f.currentSampleTime == 1065. + tracker * 101 &&
+                f.previousHostSeconds == 100. + tracker && f.currentHostSeconds == 100.01 + tracker;
+            if (firstTracker == -1) firstTracker = int(tracker);
+            else coherent = coherent && firstTracker == int(tracker);
+        };
+        start.store(true, std::memory_order_release);
+        while (finished.load(std::memory_order_acquire) < 5) check(stats(core.get()).clockFailure);
+        for (auto &thread : callbacks) thread.join();
+        const auto s = stats(core.get()); check(s.clockFailure);
+        require(coherent && firstTracker >= 0 && s.fault == 6, "concurrent clock-fault publication tore or replaced the first record");
+    }
+    std::puts("PASS concurrent clock failures and snapshots publish one complete immutable record (100 races)");
 }
 
 void negativeSampleOrigins() {
@@ -261,8 +545,10 @@ void concurrentSPSCAndControls() {
     for(unsigned n=0;!stop.load(std::memory_order_acquire)&&!failed.load();++n){
         mr_core_set_channel(core.get(),0,0,n%2?-.2f:0,-1,0);
         mr_core_set_master(core.get(),n%2?-.1f:0,0,0);
+        if(n%8==0) {auto gate=gateSettings((n&16)!=0);gate.thresholdDB=n%32?-60:-40;mr_core_set_gate(core.get(),1,0,&gate);}
         auto s=stats(core.get());
         if(s.fault)failed.store(true);
+        if(!std::isfinite(s.gateGain[1][0])||s.gateGain[1][0]<0||s.gateGain[1][0]>1)failed.store(true);
         std::this_thread::yield();
     }
     producer.join();consumer.join();
@@ -285,6 +571,16 @@ void concurrentSPSCAndControls() {
 int main(int argc, char **argv) {
     try {
         if(argc>1) {
+            if(argc==2&&std::strcmp(argv[1],"--clock-diagnostics-only")==0) {
+                clockFailureDiagnostics();concurrentClockFailureDiagnostics();faults();negativeSampleOrigins();
+                require(rtAllocations.load()==0,"C++ allocation occurred in realtime API");
+                return 0;
+            }
+            if(argc==2&&(std::strcmp(argv[1],"--gate-only")==0||std::strcmp(argv[1],"--gate-benchmark")==0)) {
+                if(std::strcmp(argv[1],"--gate-only")==0)gates();else gateBenchmark();
+                require(rtAllocations.load()==0,"C++ allocation occurred in realtime API");
+                return 0;
+            }
             if(argc==2&&std::strcmp(argv[1],"--small-block-only")==0) {
                 negativeSampleOrigins();
                 for(double ppm:{-100.,100.})for(double phase:{.07,.47,.93})simulate(16,0,ppm,phase,true,16);
@@ -292,7 +588,7 @@ int main(int argc, char **argv) {
                 std::puts("PASS 16-frame offline regressions; no hardware stability or latency claim");
                 return 0;
             }
-            require(std::strcmp(argv[1],"--concurrency-only")==0 && argc<=3,"usage: CoreTests [--concurrency-only [repetitions] | --small-block-only]");
+            require(std::strcmp(argv[1],"--concurrency-only")==0 && argc<=3,"usage: CoreTests [--concurrency-only [repetitions] | --small-block-only | --gate-only | --gate-benchmark | --clock-diagnostics-only]");
             char *end=nullptr;
             const unsigned long repetitions=argc==3?std::strtoul(argv[2],&end,10):1;
             require(repetitions>0&&repetitions<=100&&(argc!=3||*end=='\0'),"repetitions must be 1..100");
@@ -303,9 +599,11 @@ int main(int argc, char **argv) {
             require(rtAllocations.load()==0,"C++ allocation occurred in realtime API");
             return 0;
         }
+        gates();
         initializationAndPriming();std::puts("PASS configuration, safe priming, stereo routing");
         rampsMuteAndClipping();std::puts("PASS gain/master ramps, mute, finite clipping");
         faults();std::puts("PASS underflow, overflow, nonfinite and timestamp fault silence");
+        clockFailureDiagnostics();concurrentClockFailureDiagnostics();
         negativeSampleOrigins();
         for(unsigned block:{32u,64u})for(double ppm:{-100.,100.})for(double phase:{.07,.47,.93})simulate(block,0,ppm,phase,true);
         simulate(32,1,100,.37,true);simulate(64,1,-100,.79,true);

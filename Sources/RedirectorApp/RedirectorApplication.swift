@@ -82,6 +82,7 @@ private struct MainWindow: View {
 
 struct SettingsWindow: View {
     @ObservedObject var model: RedirectorModel
+    @State private var selectedTab = 0
 
     var body: some View {
         VStack(spacing: 0) {
@@ -97,12 +98,22 @@ struct SettingsWindow: View {
                     Button("設定を退避して再設定") { model.resetBrokenSettings() }
                 }.padding()
             }
-            TabView {
-                RoutingSettings(model: model).tabItem { Label("入出力", systemImage: "cable.connector") }
-                MixerSettings(model: model).tabItem { Label("ミックス", systemImage: "slider.horizontal.3") }
-                EngineSettings(model: model).tabItem { Label("動作", systemImage: "waveform") }
-                DiagnosticSettings(model: model).tabItem { Label("診断・取得テスト", systemImage: "stethoscope") }
-            }.padding(12)
+            Picker("設定画面", selection: $selectedTab) {
+                Text("入出力").tag(0)
+                Text("ミックス").tag(1)
+                Text("動作").tag(2)
+                Text("診断・取得テスト").tag(3)
+            }.pickerStyle(.segmented).padding(12)
+            // Create only the selected pane. SwiftUI's macOS Settings TabView
+            // otherwise fits and traverses the offscreen mixer on tab changes.
+            Group {
+                switch selectedTab {
+                case 1: MixerSettings(model: model)
+                case 2: EngineSettings(model: model)
+                case 3: DiagnosticSettings(model: model)
+                default: RoutingSettings(model: model)
+                }
+            }.frame(maxWidth: .infinity, maxHeight: .infinity).padding(.horizontal, 12).padding(.bottom, 12)
         }
         .frame(minWidth: 880, idealWidth: 980, minHeight: 650, idealHeight: 740)
     }

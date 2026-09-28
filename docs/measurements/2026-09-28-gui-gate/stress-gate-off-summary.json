@@ -1,0 +1,109 @@
+{
+  "completed": true,
+  "configurationFileModified": false,
+  "elapsedControlSeconds": 60.619106250000186,
+  "error": null,
+  "gateControlBatches": 2525,
+  "gateControlCalls": 106050,
+  "gateControlChannelCounts": {
+    "PC": 20,
+    "Return": 2,
+    "RME": 20
+  },
+  "gateControlChannelsPerBatch": 42,
+  "gateControlEnabledCounts": {
+    "PC": 0,
+    "Return": 0,
+    "RME": 0
+  },
+  "gateControlFirstElapsedSeconds": 0.5493137083321926,
+  "gateControlLastElapsedSeconds": 60.53252637499827,
+  "gateControlMaxBatchMicroseconds": 494.29166756453924,
+  "gateControlMaxIntervalMilliseconds": 65.51554166799178,
+  "gateControlObservedHz": 42.07843974656995,
+  "gateControlRequestedHz": 50,
+  "gateStressEnabled": true,
+  "gateStressPreservesEnabled": true,
+  "outputPeaksRemainedZero": true,
+  "requestedSeconds": 60,
+  "success": true,
+  "configuration": {
+    "bufferFrames": 64,
+    "rmeFifoFrames": 64,
+    "pcFifoFrames": 64,
+    "returnFifoFrames": 64,
+    "srcQuality": "fastest"
+  },
+  "status": {
+    "state": "running",
+    "fault": 0,
+    "clipped": 0,
+    "nonFinite": 0,
+    "ioTiming": [
+      {
+        "armedCallbacks": 45033,
+        "inputFramesMax": 64,
+        "inputFramesMin": 64,
+        "io": "RME",
+        "maxCallbackIntervalUS": 1445.7499999999998,
+        "maxProcessingUS": 16.458333333333332,
+        "outputFramesMax": 64,
+        "outputFramesMin": 64
+      },
+      {
+        "armedCallbacks": 45032,
+        "inputFramesMax": 64,
+        "inputFramesMin": 64,
+        "io": "Discrete4",
+        "maxCallbackIntervalUS": 1381.2499999999998,
+        "maxProcessingUS": 33.625,
+        "outputFramesMax": 64,
+        "outputFramesMin": 64
+      },
+      {
+        "armedCallbacks": 45032,
+        "inputFramesMax": 64,
+        "inputFramesMin": 64,
+        "io": "PC Tap",
+        "maxCallbackIntervalUS": 1376.6666666666665,
+        "maxProcessingUS": 16.666666666666664,
+        "outputFramesMax": null,
+        "outputFramesMin": null
+      }
+    ],
+    "outputPeaks": [
+      0,
+      0
+    ]
+  },
+  "sources": [
+    {
+      "name": "RME",
+      "frames": 2882048,
+      "callbacks": 45267,
+      "fifoMin": 58,
+      "fifoMax": 192,
+      "underruns": 0,
+      "overflows": 0
+    },
+    {
+      "name": "PC",
+      "frames": 2881984,
+      "callbacks": 45033,
+      "fifoMin": 62,
+      "fifoMax": 192,
+      "underruns": 0,
+      "overflows": 0
+    },
+    {
+      "name": "Return",
+      "frames": 2881984,
+      "callbacks": 45045,
+      "fifoMin": 0,
+      "fifoMax": 192,
+      "underruns": 0,
+      "overflows": 0
+    }
+  ],
+  "cleanupConfirmed": true
+}

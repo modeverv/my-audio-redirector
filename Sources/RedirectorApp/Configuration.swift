@@ -1,15 +1,86 @@
 import Foundation
 
+struct GateConfiguration: Codable, Equatable {
+    static let thresholdRange: ClosedRange<Float> = -96...0
+    static let attackRange: ClosedRange<Float> = 0.1...50
+    static let holdRange: ClosedRange<Float> = 0...1000
+    static let releaseRange: ClosedRange<Float> = 1...2000
+    static let hysteresisRange: ClosedRange<Float> = 0...24
+
+    var enabled: Bool = true
+    var thresholdDB: Float = -60
+    var attackMS: Float = 0.2
+    var holdMS: Float = 50
+    var releaseMS: Float = 30
+    var hysteresisDB: Float = 6
+
+    enum CodingKeys: String, CodingKey {
+        case enabled, thresholdDB, attackMS, holdMS, releaseMS, hysteresisDB
+    }
+
+    init(enabled: Bool = true, thresholdDB: Float = -60, attackMS: Float = 0.2,
+         holdMS: Float = 50, releaseMS: Float = 30, hysteresisDB: Float = 6) {
+        self.enabled = enabled
+        self.thresholdDB = thresholdDB
+        self.attackMS = attackMS
+        self.holdMS = holdMS
+        self.releaseMS = releaseMS
+        self.hysteresisDB = hysteresisDB
+    }
+
+    init(from decoder: Decoder) throws {
+        self.init()
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        // Missing fields use defaults; explicit null or an invalid value is an error.
+        if c.contains(.enabled) { enabled = try c.decode(Bool.self, forKey: .enabled) }
+        if c.contains(.thresholdDB) { thresholdDB = try c.decode(Float.self, forKey: .thresholdDB) }
+        if c.contains(.attackMS) { attackMS = try c.decode(Float.self, forKey: .attackMS) }
+        if c.contains(.holdMS) { holdMS = try c.decode(Float.self, forKey: .holdMS) }
+        if c.contains(.releaseMS) { releaseMS = try c.decode(Float.self, forKey: .releaseMS) }
+        if c.contains(.hysteresisDB) { hysteresisDB = try c.decode(Float.self, forKey: .hysteresisDB) }
+        try validate()
+    }
+
+    func validate() throws {
+        let fields: [(Float, ClosedRange<Float>, String)] = [
+            (thresholdDB, Self.thresholdRange, "thresholdDB"),
+            (attackMS, Self.attackRange, "attackMS"),
+            (holdMS, Self.holdRange, "holdMS"),
+            (releaseMS, Self.releaseRange, "releaseMS"),
+            (hysteresisDB, Self.hysteresisRange, "hysteresisDB")
+        ]
+        for (value, range, name) in fields {
+            guard value.isFinite, range.contains(value) else {
+                throw ConfigurationError.invalid("Gate \(name) は \(range.lowerBound)〜\(range.upperBound) の有限値で指定してください。")
+            }
+        }
+    }
+}
+
 struct ChannelConfiguration: Codable, Equatable, Identifiable {
     var channel: Int
     var gainDB: Float = 0
     var pan: Float
     var muted = true
+    var gate = GateConfiguration()
     var id: Int { channel }
+
+    enum CodingKeys: String, CodingKey {
+        case channel, gainDB, pan, muted, gate
+    }
 
     init(channel: Int) {
         self.channel = channel
         self.pan = channel.isMultiple(of: 2) ? 1 : -1
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(channel: try c.decode(Int.self, forKey: .channel))
+        gainDB = try c.decode(Float.self, forKey: .gainDB)
+        pan = try c.decode(Float.self, forKey: .pan)
+        muted = try c.decode(Bool.self, forKey: .muted)
+        if c.contains(.gate) { gate = try c.decode(GateConfiguration.self, forKey: .gate) }
     }
 }
 
@@ -31,10 +102,12 @@ struct RedirectorConfiguration: Codable, Equatable {
     var forwardGainDB: Float = 0
     var returnGainDB: Float = 0
     var returnMuted = true
+    var returnGates = [GateConfiguration(), GateConfiguration()]
+    var returnGateLinked = true
     var tapMuteOriginal = false
     var rmeChannels: [ChannelConfiguration] = []
     var pcChannels: [ChannelConfiguration] = []
-    // UI-only state; bridge configuration tolerates additional fields.
+    // Stereo links also link gate detectors and parameters; pan remains independent.
     var rmeStereoLinks: [Int] = []
     var pcStereoLinks: [Int] = []
     var rmeReturnLabels: [String] = []
@@ -49,6 +122,7 @@ struct RedirectorConfiguration: Codable, Equatable {
         case bufferFrames, rmeFifoFrames, pcFifoFrames, returnFifoFrames, srcQuality
         case rmeReturnLeft, rmeReturnRight, d4ReturnLeft, d4ReturnRight
         case forwardGainDB, returnGainDB, returnMuted, tapMuteOriginal
+        case returnGates, returnGateLinked
         case rmeChannels, pcChannels, rmeStereoLinks, pcStereoLinks
         case rmeReturnLabels, d4ReturnLabels, rmeReturnStreamIndices, rmeReturnStreamStarts
         case pcStreamChannelCount, pcStreamStartingChannel
@@ -79,6 +153,8 @@ struct RedirectorConfiguration: Codable, Equatable {
         forwardGainDB = try c.decodeIfPresent(Float.self, forKey: .forwardGainDB) ?? 0
         returnGainDB = try c.decodeIfPresent(Float.self, forKey: .returnGainDB) ?? 0
         returnMuted = try c.decodeIfPresent(Bool.self, forKey: .returnMuted) ?? true
+        if c.contains(.returnGates) { returnGates = try c.decode([GateConfiguration].self, forKey: .returnGates) }
+        if c.contains(.returnGateLinked) { returnGateLinked = try c.decode(Bool.self, forKey: .returnGateLinked) }
         tapMuteOriginal = try c.decodeIfPresent(Bool.self, forKey: .tapMuteOriginal) ?? false
         rmeChannels = try c.decodeIfPresent([ChannelConfiguration].self, forKey: .rmeChannels) ?? []
         pcChannels = try c.decodeIfPresent([ChannelConfiguration].self, forKey: .pcChannels) ?? []
@@ -106,6 +182,24 @@ struct RedirectorConfiguration: Codable, Equatable {
                   channels.allSatisfy({ $0.channel > 0 && $0.gainDB.isFinite && (-90...12).contains($0.gainDB) && $0.pan.isFinite && (-1...1).contains($0.pan) }) else {
                 throw ConfigurationError.invalid("入力チャンネルの設定が不正です。")
             }
+            for channel in channels { try channel.gate.validate() }
+        }
+        guard returnGates.count == 2 else {
+            throw ConfigurationError.invalid("RETURN Gate は左右2チャンネル分を指定してください。")
+        }
+        for gate in returnGates { try gate.validate() }
+        for (channels, links) in [(rmeChannels, rmeStereoLinks), (pcChannels, pcStereoLinks)] {
+            for pair in links {
+                guard pair < Int.max,
+                      let left = channels.first(where: { $0.channel == pair }),
+                      let right = channels.first(where: { $0.channel == pair + 1 }) else { continue }
+                guard left.gate == right.gate else {
+                    throw ConfigurationError.invalid("Link中のch \(pair)/\(pair + 1)のGate設定が一致しません。")
+                }
+            }
+        }
+        if returnGateLinked, returnGates[0] != returnGates[1] {
+            throw ConfigurationError.invalid("RETURN Link中の左右Gate設定が一致しません。")
         }
     }
 
@@ -120,7 +214,8 @@ struct RedirectorConfiguration: Codable, Equatable {
         let keys: Set<String> = ["schemaVersion", "rmeUID", "d4UID", "pcUID", "pcStreamIndex",
                                  "bufferFrames", "rmeFifoFrames", "pcFifoFrames", "returnFifoFrames", "srcQuality",
                                  "rmeReturnLeft", "rmeReturnRight", "d4ReturnLeft", "d4ReturnRight",
-                                 "forwardGainDB", "returnGainDB", "returnMuted", "tapMuteOriginal", "rmeChannels", "pcChannels"]
+                                 "forwardGainDB", "returnGainDB", "returnMuted", "tapMuteOriginal", "rmeChannels", "pcChannels",
+                                 "rmeStereoLinks", "pcStereoLinks", "returnGates", "returnGateLinked"]
         let object = try JSONSerialization.jsonObject(with: Data(json().utf8)) as! [String: Any]
         let selected = object.filter { keys.contains($0.key) }
         return String(decoding: try JSONSerialization.data(withJSONObject: selected, options: [.sortedKeys]), as: UTF8.self)
@@ -183,6 +278,7 @@ struct SourceStatistics: Equatable, Identifiable {
     var overflows: UInt64
     var ppm: Double?
     var peaks: [Double]
+    var gateGains: [Double]
     var id: String { name }
 
     init(_ value: [String: Any]) {
@@ -194,6 +290,7 @@ struct SourceStatistics: Equatable, Identifiable {
         overflows = (value["overflows"] as? NSNumber)?.uint64Value ?? 0
         ppm = value["ppm"] as? Double
         peaks = (value["peaks"] as? [NSNumber] ?? []).map(\.doubleValue)
+        gateGains = (value["gateGains"] as? [NSNumber] ?? []).map(\.doubleValue)
     }
 }
 

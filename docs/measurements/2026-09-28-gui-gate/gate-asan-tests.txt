@@ -1,0 +1,5 @@
+PASS gate threshold/hysteresis, sample-exact attack/hold/release and 16/32/64 block continuity
+PASS per-source stereo max detector, common gain, first-channel settings and linked return default
+PASS default noise suppression before gain/pan, exact-zero outputs, bypass and live enable
+PASS gate parameter bounds, nonfinite fail-closed and stopped-only link changes
+PASS maximum envelope times, bounded monotonic release and smooth live settings updates

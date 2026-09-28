@@ -4,11 +4,62 @@ import Combine
 import Foundation
 import RedirectorBridge
 
+struct MeterLevels {
+    var inputPeaks: [[Double]] = [[], [], []]
+    var gateGains: [[Double]] = [[], [], []]
+    var outputPeaks: [Double] = [0, 0]
+    var active = false
+
+    init() {}
+    init(_ raw: inout MRMeterLevels) {
+        active = raw.active != 0
+        let counts = withUnsafeBytes(of: &raw.channelCounts) { Array($0.bindMemory(to: UInt32.self)) }
+        let peaks = withUnsafeBytes(of: &raw.inputPeaks) { Array($0.bindMemory(to: Float.self)) }
+        let gates = withUnsafeBytes(of: &raw.gateGains) { Array($0.bindMemory(to: Float.self)) }
+        for source in 0..<3 {
+            let start = source * Int(MR_METER_CHANNELS)
+            let end = start + min(Int(counts[source]), Int(MR_METER_CHANNELS))
+            inputPeaks[source] = peaks[start..<end].map(Double.init)
+            gateGains[source] = gates[start..<end].map(Double.init)
+        }
+        outputPeaks = withUnsafeBytes(of: &raw.outputPeaks) { $0.bindMemory(to: Float.self).map(Double.init) }
+    }
+}
+
+@MainActor
+final class RedirectorTelemetry: ObservableObject {
+    @Published fileprivate(set) var status = EngineStatus()
+    // AppKit reads this cache on its display tick. Meter updates never invalidate
+    // the settings tree, sliders or SwiftUI tab layout.
+    fileprivate(set) var meters = MeterLevels()
+}
+
 final class BridgeController: @unchecked Sendable {
     private let queue = DispatchQueue(label: "local.my-redirector.bridge-control", qos: .userInitiated)
     private var engine: OpaquePointer?
     private var timer: DispatchSourceTimer?
-    var onStatus: ((String) -> Void)?
+    private var meterTimer: DispatchSourceTimer?
+    private var metersVisible = false
+    var onStatus: ((String, EngineStatus?, String?) -> Void)?
+    var onMeters: ((MeterLevels) -> Void)?
+
+    @discardableResult
+    private func publishStatus() -> Bool {
+        guard let engine else { return false }
+        let json = takeString(mr_engine_status_json(engine))
+        do {
+            // JSON parsing and fault trace decoding stay off the main thread.
+            let status = try EngineStatus(json: json)
+            onStatus?(json, status, nil)
+            let active = ["starting", "priming", "running", "probe"].contains(status.state)
+            if !active {
+                timer?.cancel(); timer = nil
+                meterTimer?.cancel(); meterTimer = nil
+                onMeters?(MeterLevels())
+            }
+            return active
+        } catch { onStatus?(json, nil, error.localizedDescription); return false }
+    }
 
     private func takeString(_ pointer: UnsafeMutablePointer<CChar>?) -> String {
         guard let pointer else { return "{}" }
@@ -34,8 +85,7 @@ final class BridgeController: @unchecked Sendable {
             }
             let message = String(cString: error)
             completion(result == 0 ? nil : (message.isEmpty ? "音声の開始に失敗しました。" : message))
-            self.onStatus?(self.takeString(mr_engine_status_json(engine)))
-            self.startTimer()
+            if self.publishStatus() { self.startTimer(); self.updateMeterTimer() }
         }
     }
 
@@ -45,17 +95,36 @@ final class BridgeController: @unchecked Sendable {
         source.schedule(deadline: .now() + .milliseconds(200), repeating: .milliseconds(200), leeway: .milliseconds(20))
         source.setEventHandler { [weak self] in
             guard let self, let engine = self.engine else { return }
-            self.onStatus?(self.takeString(mr_engine_status_json(engine)))
+            _ = engine
+            self.publishStatus()
         }
         timer = source
         source.resume()
+    }
+
+    func setMetersVisible(_ visible: Bool) {
+        queue.async { self.metersVisible = visible; self.updateMeterTimer() }
+    }
+
+    private func updateMeterTimer() {
+        guard metersVisible, timer != nil else { meterTimer?.cancel(); meterTimer = nil; return }
+        guard meterTimer == nil else { return }
+        let source = DispatchSource.makeTimerSource(queue: queue)
+        source.schedule(deadline: .now(), repeating: .milliseconds(33), leeway: .milliseconds(3))
+        source.setEventHandler { [weak self] in
+            guard let self, let engine = self.engine else { return }
+            var raw = MRMeterLevels()
+            mr_engine_copy_meters(engine, &raw)
+            self.onMeters?(MeterLevels(&raw))
+        }
+        meterTimer = source; source.resume()
     }
 
     func stop(completion: @escaping () -> Void = {}) {
         queue.async {
             if let engine = self.engine {
                 mr_engine_stop(engine)
-                self.onStatus?(self.takeString(mr_engine_status_json(engine)))
+                self.publishStatus()
             }
             completion()
         }
@@ -77,10 +146,22 @@ final class BridgeController: @unchecked Sendable {
         }
     }
 
+    func setGates(source: Int, channels: [(Int, GateConfiguration)]) {
+        queue.async {
+            guard let engine = self.engine else { return }
+            for (channel, gate) in channels where channel > 0 {
+                mr_engine_set_gate(engine, UInt32(source), UInt32(channel - 1), gate.enabled ? 1 : 0,
+                                   gate.thresholdDB, gate.attackMS, gate.holdMS, gate.releaseMS, gate.hysteresisDB)
+            }
+        }
+    }
+
     func shutdown(completion: @escaping () -> Void) {
         queue.async {
             self.timer?.cancel()
             self.timer = nil
+            self.meterTimer?.cancel()
+            self.meterTimer = nil
             if let engine = self.engine {
                 mr_engine_stop(engine)
                 mr_engine_destroy(engine)
@@ -95,7 +176,8 @@ final class BridgeController: @unchecked Sendable {
 final class RedirectorModel: ObservableObject {
     @Published var configuration = RedirectorConfiguration()
     @Published private(set) var inventory = AudioInventory.empty
-    @Published private(set) var status = EngineStatus()
+    let telemetry = RedirectorTelemetry()
+    var status: EngineStatus { telemetry.status }
     @Published private(set) var refreshing = false
     @Published private(set) var pendingAction: String?
     @Published var alertMessage: String?
@@ -133,8 +215,11 @@ final class RedirectorModel: ObservableObject {
                 alertMessage = lastError
             }
         }
-        bridge.onStatus = { [weak self] json in
-            Task { @MainActor [weak self] in self?.receiveStatus(json) }
+        bridge.onStatus = { [weak self] json, status, error in
+            Task { @MainActor [weak self] in self?.receiveStatus(json, status: status, error: error) }
+        }
+        bridge.onMeters = { [weak self] meters in
+            Task { @MainActor [weak self] in self?.telemetry.meters = meters }
         }
         refreshInventory()
     }
@@ -158,16 +243,18 @@ final class RedirectorModel: ObservableObject {
         }
     }
 
-    private func receiveStatus(_ json: String) {
+    private func receiveStatus(_ json: String, status next: EngineStatus?, error: String?) {
         lastStatusJSON = json
-        do {
-            let next = try EngineStatus(json: json)
-            if status != next { status = next }
+        if let next {
+            // Only changes which affect control availability invalidate settings.
+            // Counters and level changes belong to the independent telemetry model.
+            if status.state != next.state { objectWillChange.send() }
+            if status != next { telemetry.status = next }
             if let error = next.error, !error.isEmpty, next.state == "fault", error != lastFaultMessage {
                 lastFaultMessage = error
                 report(error)
             }
-        } catch { report("エンジン状態の解析に失敗しました。\n\(error.localizedDescription)") }
+        } else if let error { report("エンジン状態の解析に失敗しました。\n\(error)") }
     }
 
     func report(_ message: String) {
@@ -175,7 +262,10 @@ final class RedirectorModel: ObservableObject {
         alertMessage = message
     }
 
-    func setSettingsVisible(_ visible: Bool) { settingsVisible = visible }
+    func setSettingsVisible(_ visible: Bool) {
+        settingsVisible = visible
+        bridge.setMetersVisible(visible)
+    }
 
     func editStructure(_ change: (inout RedirectorConfiguration) -> Void, refreshChannels: Bool = false) {
         guard !structuralLocked else { return }
@@ -279,6 +369,7 @@ final class RedirectorModel: ObservableObject {
         if source == 0 { configuration.rmeStereoLinks = links } else { configuration.pcStereoLinks = links }
         if linked, let first = channels(source: source).first(where: { $0.channel == pair }) {
             changeChannel(source: source, channel: pair, gain: first.gainDB, muted: first.muted)
+            changeGate(source: source, channel: pair, gate: first.gate)
         } else { saveConfiguration() }
     }
 
@@ -306,6 +397,36 @@ final class RedirectorModel: ObservableObject {
         if let muted { configuration.returnMuted = muted }
         bridge.setMaster(forward: configuration.forwardGainDB, returned: configuration.returnGainDB, muted: configuration.returnMuted)
         saveConfiguration()
+    }
+
+    func changeGate(source: Int, channel: Int, gate: GateConfiguration) {
+        guard !isProbing, !storageBlocked, (0...2).contains(source), channel > 0 else { return }
+        do { try gate.validate() } catch { report(error.localizedDescription); return }
+        var changes: [(Int, GateConfiguration)] = []
+        if source == 2 {
+            guard channel <= 2, configuration.returnGates.count == 2 else { return }
+            let group = configuration.returnGateLinked ? [1, 2] : [channel]
+            var gates = configuration.returnGates
+            for number in group { gates[number - 1] = gate; changes.append((number, gate)) }
+            configuration.returnGates = gates
+        } else {
+            var list = channels(source: source)
+            let pair = channel.isMultiple(of: 2) ? channel - 1 : channel
+            let group = linked(source: source, pair: pair) ? [pair, pair + 1] : [channel]
+            for index in list.indices where group.contains(list[index].channel) {
+                list[index].gate = gate; changes.append((list[index].channel, gate))
+            }
+            if source == 0 { configuration.rmeChannels = list } else { configuration.pcChannels = list }
+        }
+        bridge.setGates(source: source, channels: changes)
+        saveConfiguration()
+    }
+
+    func setReturnGateLinked(_ linked: Bool) {
+        guard !structuralLocked, configuration.returnGates.count == 2 else { return }
+        configuration.returnGateLinked = linked
+        if linked { changeGate(source: 2, channel: 1, gate: configuration.returnGates[0]) }
+        else { saveConfiguration() }
     }
 
     private func validateSelection(probe: Bool) throws {
@@ -416,21 +537,20 @@ final class RedirectorModel: ObservableObject {
 
     private func saveConfiguration() {
         guard !storageBlocked else { return }
-        do {
-            let data = Data(try configuration.json().utf8)
-            let url = configurationURL
-            saveWork?.cancel()
-            let work = DispatchWorkItem { [weak self] in
-                do {
-                    try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-                    try data.write(to: url, options: .atomic)
-                } catch {
-                    Task { @MainActor [weak self] in self?.report("設定を保存できませんでした。\n\(error.localizedDescription)") }
-                }
+        let snapshot = configuration
+        let url = configurationURL
+        saveWork?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            do {
+                let data = Data(try snapshot.json().utf8)
+                try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+                try data.write(to: url, options: .atomic)
+            } catch {
+                Task { @MainActor [weak self] in self?.report("設定を保存できませんでした。\n\(error.localizedDescription)") }
             }
-            saveWork = work
-            persistenceQueue.asyncAfter(deadline: .now() + .milliseconds(350), execute: work)
-        } catch { report(error.localizedDescription) }
+        }
+        saveWork = work
+        persistenceQueue.asyncAfter(deadline: .now() + .milliseconds(350), execute: work)
     }
 
     func exportDiagnostics() {

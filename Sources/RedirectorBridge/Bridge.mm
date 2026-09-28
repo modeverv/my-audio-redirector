@@ -118,12 +118,20 @@ NSDictionary *inventoryDevice(AudioObjectID objectID) {
     }
     r[@"outputStreams"] = streams; return r;
 }
-struct ChannelSetting { uint32_t channel; float gain, pan; bool muted; };
+MRGateSettings defaultGate() { return {1, -60, 0.2f, 50, 30, 6}; }
+bool sameGate(const MRGateSettings &a, const MRGateSettings &b) {
+    return a.enabled==b.enabled && a.thresholdDB==b.thresholdDB && a.attackMS==b.attackMS &&
+           a.holdMS==b.holdMS && a.releaseMS==b.releaseMS && a.hysteresisDB==b.hysteresisDB;
+}
+struct ChannelSetting { uint32_t channel; float gain, pan; bool muted; MRGateSettings gate = defaultGate(); };
 struct Config {
     std::string rmeUID, d4UID, pcUID;
     uint32_t pcStream = 0, buffer = 64, fifo[3] = {64,64,64}, rmeLeft = 11, rmeRight = 12, d4Left = 1, d4Right = 2;
     float forward = 0, returning = 0; bool returnMuted = true, tapMute = false; int quality = 0;
     std::vector<ChannelSetting> channels[2];
+    std::vector<uint32_t> gateLinks[2];
+    MRGateSettings returnGates[2] = {defaultGate(), defaultGate()};
+    bool returnGateLinked = true;
 };
 bool number(id object) { return [object isKindOfClass:NSNumber.class] && CFGetTypeID((__bridge CFTypeRef)object) != CFBooleanGetTypeID(); }
 bool boolean(id object) { return [object isKindOfClass:NSNumber.class] && CFGetTypeID((__bridge CFTypeRef)object) == CFBooleanGetTypeID(); }
@@ -134,7 +142,9 @@ bool uintField(NSDictionary *d, NSString *key, uint32_t &result, uint32_t low, u
 }
 bool floatField(NSDictionary *d, NSString *key, float &result, float low, float high, std::string &error) {
     id value = d[key]; if (!value) return true;
-    if (!number(value) || !std::isfinite([value doubleValue]) || [value doubleValue] < low || [value doubleValue] > high) { error = "Invalid numeric field: " + utf8(key); return false; }
+    // Configuration controls are Float values. Compare at that same precision:
+    // JSON 0.1 must not be rejected against the rounded Float bound 0.1f.
+    if (!number(value) || !std::isfinite([value doubleValue]) || !std::isfinite([value floatValue]) || [value floatValue] < low || [value floatValue] > high) { error = "Invalid numeric field: " + utf8(key); return false; }
     result = [value floatValue]; return true;
 }
 bool boolField(NSDictionary *d, NSString *key, bool &result, std::string &error) {
@@ -145,12 +155,35 @@ bool uidField(NSDictionary *d, NSString *key, std::string &result, std::string &
     id value = d[key]; if (![value isKindOfClass:NSString.class] || [value length] == 0 || [value length] > 1024) { error = "Explicit device UID required: " + utf8(key); return false; }
     result = utf8(value); return true;
 }
+bool parseGate(id value, MRGateSettings &gate, std::string &error) {
+    if (!value) return true;
+    if (![value isKindOfClass:NSDictionary.class]) { error = "Gate must be an object"; return false; }
+    for (NSString *key in value) if (![@[@"enabled",@"thresholdDB",@"attackMS",@"holdMS",@"releaseMS",@"hysteresisDB"] containsObject:key]) { error = "Unknown gate setting: " + utf8(key); return false; }
+    bool enabled = gate.enabled != 0;
+    if (!boolField(value,@"enabled",enabled,error) || !floatField(value,@"thresholdDB",gate.thresholdDB,-96,0,error) ||
+        !floatField(value,@"attackMS",gate.attackMS,0.1f,50,error) || !floatField(value,@"holdMS",gate.holdMS,0,1000,error) ||
+        !floatField(value,@"releaseMS",gate.releaseMS,1,2000,error) || !floatField(value,@"hysteresisDB",gate.hysteresisDB,0,24,error)) return false;
+    gate.enabled = enabled; return true;
+}
+bool parseLinks(id value, std::vector<uint32_t> &links, std::string &error) {
+    if (!value) return true;
+    if (![value isKindOfClass:NSArray.class] || [value count] > MR_MAX_CHANNELS/2) { error = "Invalid stereo link list"; return false; }
+    bool used[MR_MAX_CHANNELS]{};
+    for (id entry in value) {
+        if (!number(entry) || !std::isfinite([entry doubleValue]) || [entry doubleValue] != std::floor([entry doubleValue]) ||
+            [entry doubleValue] < 1 || [entry doubleValue] >= MR_MAX_CHANNELS || [entry intValue]%2 != 1 || used[[entry intValue]-1]) {
+            error = "Stereo link requires a unique odd channel number with a right peer"; return false;
+        }
+        used[[entry intValue]-1] = true; links.push_back([entry unsignedIntValue]-1);
+    }
+    return true;
+}
 bool parse(const char *json, Config &c, bool probe, std::string &error) {
     if (!json || strnlen(json, 1024 * 1024 + 1) > 1024 * 1024) { error = "Missing or oversized configuration"; return false; }
     NSError *err = nil; id value = [NSJSONSerialization JSONObjectWithData:[NSData dataWithBytes:json length:strlen(json)] options:0 error:&err];
     if (![value isKindOfClass:NSDictionary.class]) { error = "Configuration must be a JSON object"; return false; }
     NSDictionary *d = value; uint32_t version = 0;
-    NSSet *keys = [NSSet setWithArray:@[@"schemaVersion",@"rmeUID",@"d4UID",@"pcUID",@"pcStreamIndex",@"bufferFrames",@"rmeFifoFrames",@"pcFifoFrames",@"returnFifoFrames",@"srcQuality",@"rmeReturnLeft",@"rmeReturnRight",@"d4ReturnLeft",@"d4ReturnRight",@"forwardGainDB",@"returnGainDB",@"returnMuted",@"tapMuteOriginal",@"rmeChannels",@"pcChannels"]];
+    NSSet *keys = [NSSet setWithArray:@[@"schemaVersion",@"rmeUID",@"d4UID",@"pcUID",@"pcStreamIndex",@"bufferFrames",@"rmeFifoFrames",@"pcFifoFrames",@"returnFifoFrames",@"srcQuality",@"rmeReturnLeft",@"rmeReturnRight",@"d4ReturnLeft",@"d4ReturnRight",@"forwardGainDB",@"returnGainDB",@"returnMuted",@"tapMuteOriginal",@"rmeChannels",@"pcChannels",@"rmeStereoLinks",@"pcStereoLinks",@"returnGates",@"returnGateLinked"]];
     for (NSString *key in d) if (![keys containsObject:key]) { error = "Unknown configuration field: " + utf8(key); return false; }
     if (!uintField(d,@"schemaVersion",version,1,1,true,error) || !uidField(d,@"pcUID",c.pcUID,error) || !uintField(d,@"pcStreamIndex",c.pcStream,0,63,true,error) || !uintField(d,@"bufferFrames",c.buffer,16,MR_MAX_FRAMES,false,error) || !boolField(d,@"tapMuteOriginal",c.tapMute,error)) return false;
     if (probe) { if (c.tapMute) { error = "Capture-only probe requires tapMuteOriginal=false"; return false; } return true; }
@@ -160,6 +193,13 @@ bool parse(const char *json, Config &c, bool probe, std::string &error) {
     for (int i = 0; i < 3; ++i) if (!uintField(d,fifos[i],c.fifo[i],16,MR_MAX_FRAMES,false,error)) return false;
     if (!uintField(d,@"rmeReturnLeft",c.rmeLeft,1,MR_MAX_CHANNELS,false,error) || !uintField(d,@"rmeReturnRight",c.rmeRight,1,MR_MAX_CHANNELS,false,error) || !uintField(d,@"d4ReturnLeft",c.d4Left,1,MR_MAX_CHANNELS,false,error) || !uintField(d,@"d4ReturnRight",c.d4Right,1,MR_MAX_CHANNELS,false,error) || !floatField(d,@"forwardGainDB",c.forward,-96,12,error) || !floatField(d,@"returnGainDB",c.returning,-96,12,error) || !boolField(d,@"returnMuted",c.returnMuted,error)) return false;
     if (c.rmeLeft == c.rmeRight || c.d4Left == c.d4Right) { error = "Stereo return channels must be distinct"; return false; }
+    if (!parseLinks(d[@"rmeStereoLinks"],c.gateLinks[0],error) || !parseLinks(d[@"pcStereoLinks"],c.gateLinks[1],error) ||
+        !boolField(d,@"returnGateLinked",c.returnGateLinked,error)) return false;
+    id returnGates = d[@"returnGates"];
+    if (returnGates) {
+        if (![returnGates isKindOfClass:NSArray.class] || [returnGates count] != 2) { error = "RETURN requires two gate settings"; return false; }
+        for (int i=0;i<2;++i) if (!parseGate(returnGates[i],c.returnGates[i],error)) return false;
+    }
     id q = d[@"srcQuality"];
     if (q) { if ([q isEqual:@"fastest"]) c.quality = 0; else if ([q isEqual:@"medium"]) c.quality = 1; else { error = "srcQuality must be fastest or medium"; return false; } }
     NSString *fields[] = {@"rmeChannels", @"pcChannels"};
@@ -169,12 +209,19 @@ bool parse(const char *json, Config &c, bool probe, std::string &error) {
         bool used[MR_MAX_CHANNELS]{};
         for (id row in rows) {
             if (![row isKindOfClass:NSDictionary.class]) { error = "Channel row must be an object"; return false; }
-            for (NSString *key in row) if (![@[@"channel",@"gainDB",@"pan",@"muted"] containsObject:key]) { error = "Unknown channel setting: " + utf8(key); return false; }
+            for (NSString *key in row) if (![@[@"channel",@"gainDB",@"pan",@"muted",@"gate"] containsObject:key]) { error = "Unknown channel setting: " + utf8(key); return false; }
             ChannelSetting s{0,0,0,true};
             if (!uintField(row,@"channel",s.channel,1,MR_MAX_CHANNELS,true,error) || !floatField(row,@"gainDB",s.gain,-96,12,error) || !floatField(row,@"pan",s.pan,-1,1,error) || !boolField(row,@"muted",s.muted,error)) return false;
+            if (!parseGate(row[@"gate"],s.gate,error)) return false;
             if (used[s.channel-1]) { error = "Duplicate source channel"; return false; } used[s.channel-1] = true; --s.channel; c.channels[source].push_back(s);
         }
     }
+    for(int source=0;source<2;++source)for(uint32_t pair:c.gateLinks[source]) {
+        MRGateSettings left=defaultGate(),right=defaultGate();
+        for(const auto &row:c.channels[source]) { if(row.channel==pair)left=row.gate; if(row.channel==pair+1)right=row.gate; }
+        if(!sameGate(left,right)) { error="Linked channels require identical gate settings"; return false; }
+    }
+    if(c.returnGateLinked&&!sameGate(c.returnGates[0],c.returnGates[1])) { error="Linked RETURN channels require identical gate settings"; return false; }
     return true;
 }
 struct StreamRecord { AudioObjectID id; AudioStreamBasicDescription format; };
@@ -193,7 +240,7 @@ struct TimestampTrace {
     double arrivalHostSeconds = 0, inputSampleTime = 0, inputHostSeconds = 0, outputSampleTime = 0, outputHostSeconds = 0;
     uint32_t inputFlags = 0, outputFlags = 0;
     int32_t inputFrames = 0, outputFrames = 0;
-    bool inputTimePresent = false, outputTimePresent = false;
+    bool inputTimePresent = false, outputTimePresent = false, armed = false, stopping = false;
 };
 struct IOContext {
     MREngine *engine = nullptr; int role = 0; AudioObjectID device = 0; AudioDeviceIOProcID io = nullptr; bool started = false;
@@ -247,6 +294,7 @@ void traceTimestamp(IOContext *io,uint64_t arrival,const AudioBufferList *input,
     uint32_t index=io->timestampTraceCount.load(std::memory_order_relaxed);
     if(index>=kTimestampTraceCapacity)return;
     auto &row=io->timestampTrace[index];double scale=io->engine->hostScale;
+    row.armed=io->engine->captureArmed.load(std::memory_order_acquire);row.stopping=io->engine->stopping.load(std::memory_order_acquire);
     row.arrivalHostSeconds=double(arrival)*scale;row.inputFrames=traceFrameCount(input);row.inputTimePresent=inputTime!=nullptr;
     if(inputTime){row.inputSampleTime=inputTime->mSampleTime;row.inputHostSeconds=double(inputTime->mHostTime)*scale;row.inputFlags=inputTime->mFlags;}
     row.outputFrames=io->role==2?0:traceFrameCount(output);row.outputTimePresent=io->role!=2 && outputTime!=nullptr;
@@ -550,7 +598,18 @@ bool begin(MREngine *e,const char *json,bool probe,std::string &error) {
         for(int i=0;i<3;++i)cc.fifoTarget[i]=e->config.fifo[i];char coreError[512]{};e->core=mr_core_create(&cc,coreError,sizeof(coreError));
         if(!e->core){error=std::string("Realtime core creation failed: ")+coreError;return false;}
         for(uint32_t source=0;source<2;++source)for(uint32_t ch=0;ch<cc.channels[source];++ch)mr_core_set_channel(e->core,source,ch,0,(ch%2)?1:-1,1);
-        for(uint32_t source=0;source<2;++source)for(const auto &s:e->config.channels[source])mr_core_set_channel(e->core,source,s.channel,s.gain,s.pan,s.muted);
+        for(uint32_t source=0;source<2;++source) {
+            for(const auto &s:e->config.channels[source]) {
+                mr_core_set_channel(e->core,source,s.channel,s.gain,s.pan,s.muted);
+                mr_core_set_gate(e->core,source,s.channel,&s.gate);
+            }
+            for(uint32_t pair:e->config.gateLinks[source]) {
+                if(pair+1>=cc.channels[source]) { error="Stereo gate link exceeds source channel count"; return false; }
+                mr_core_set_gate_link(e->core,source,pair,1);
+            }
+        }
+        for(uint32_t ch=0;ch<2;++ch)mr_core_set_gate(e->core,2,ch,&e->config.returnGates[ch]);
+        mr_core_set_gate_link(e->core,2,0,e->config.returnGateLinked);
         mr_core_set_master(e->core,e->config.forward,e->config.returning,e->config.returnMuted);
         e->io[0].device=e->rme.id;e->io[0].inputChannels=e->rme.inputs;e->io[0].outputChannels=e->rme.outputs;e->io[0].left=e->config.rmeLeft-1;e->io[0].right=e->config.rmeRight-1;
         e->io[1].device=e->d4.id;e->io[1].inputChannels=e->d4.inputs;e->io[1].outputChannels=e->d4.outputs;
@@ -576,10 +635,23 @@ bool unchanged(const DeviceRecord &d,bool withInput,bool withOutput,std::string 
     return true;
 }
 const char *rtError(int code){switch(code){case 1:return "Input buffer layout/frame count is unsupported";case 2:return "Realtime core missing in callback";case 3:return "Output channel buffer is unavailable or malformed";case 4:return "Audio device format/rate/layout/buffer property changed; output muted immediately";default:return "Realtime callback fault";}}
+const char *clockTrackerName(uint32_t tracker){
+    static const char *names[]={"RME input","PC input","Return input","Discrete4 output","RME output"};
+    return tracker<5?names[tracker]:"unknown clock";
+}
+std::string coreError(const MRCoreStats &stats){
+    const auto &clock=stats.clockFailure;
+    if(stats.fault!=6||!clock.valid)return "Realtime DSP/FIFO fault: "+std::to_string(stats.fault);
+    std::string why="Audio timestamp discontinuity: ";why+=clockTrackerName(clock.tracker);
+    if(clock.reason==2)why+=" sample gap "+std::to_string(clock.currentSampleTime-clock.expectedSampleTime)+" frames";
+    else if(clock.reason==3)why+=" host time did not advance";
+    else why+=" invalid timestamp";
+    return why+"; output stopped (fault 6)";
+}
 void poll(MREngine *e,MRCoreStats &stats){
     if(e->core){mr_core_snapshot(e->core,&stats);e->lastStats=stats;}else stats=e->lastStats;
     if(!e->active)return;std::string why;int code=e->signals->rtFault.load(std::memory_order_relaxed);
-    if(code && code!=4)why=rtError(code);else if(stats.fault)why="Realtime DSP/FIFO fault: "+std::to_string(stats.fault);
+    if(code && code!=4)why=rtError(code);else if(stats.fault)why=coreError(stats);
     if(why.empty()&&!e->probe){if(!unchanged(e->rme,true,true,why)||!unchanged(e->d4,true,true,why)){} }
     if(why.empty())unchanged(e->pc,false,true,why);
     if(why.empty()){
@@ -603,7 +675,7 @@ NSArray *timestampTraceJSON(MREngine *e){
             const auto &row=io.timestampTrace[n];
             id inputSample=std::isfinite(row.inputSampleTime)?(id)@(row.inputSampleTime):NSNull.null;
             id outputSample=std::isfinite(row.outputSampleTime)?(id)@(row.outputSampleTime):NSNull.null;
-            [rows addObject:@{@"callback":@(n+1),@"arrivalHostSeconds":@(row.arrivalHostSeconds),@"inputFrames":@(row.inputFrames),@"inputTimePresent":@(row.inputTimePresent),@"inputSampleTime":inputSample,@"inputHostSeconds":@(row.inputHostSeconds),@"inputFlags":@(row.inputFlags),@"outputFrames":@(row.outputFrames),@"outputTimePresent":@(row.outputTimePresent),@"outputSampleTime":outputSample,@"outputHostSeconds":@(row.outputHostSeconds),@"outputFlags":@(row.outputFlags)}];
+            [rows addObject:@{@"callback":@(n+1),@"armed":@(row.armed),@"stopping":@(row.stopping),@"arrivalHostSeconds":@(row.arrivalHostSeconds),@"inputFrames":@(row.inputFrames),@"inputTimePresent":@(row.inputTimePresent),@"inputSampleTime":inputSample,@"inputHostSeconds":@(row.inputHostSeconds),@"inputFlags":@(row.inputFlags),@"outputFrames":@(row.outputFrames),@"outputTimePresent":@(row.outputTimePresent),@"outputSampleTime":outputSample,@"outputHostSeconds":@(row.outputHostSeconds),@"outputFlags":@(row.outputFlags)}];
         }
         [streams addObject:@{@"io":names[i],@"deviceID":@(io.device),@"capacity":@(kTimestampTraceCapacity),@"capturedCallbacks":@(count),@"totalCallbacks":@(io.callbacks.load(std::memory_order_relaxed)),@"rows":rows}];
     }
@@ -622,15 +694,20 @@ NSDictionary *snapshot(MREngine *e){
     MRCoreStats stats{};poll(e,stats);
     NSMutableDictionary *result=[NSMutableDictionary dictionaryWithDictionary:@{@"state":ns(e->state),@"error":e->error.empty()?(id)NSNull.null:ns(e->error),@"rmeBufferFrames":e->rme.id?@(e->rme.buffer):(id)NSNull.null,@"d4BufferFrames":e->d4.id?@(e->d4.buffer):(id)NSNull.null,@"pcBufferFrames":e->tapBuffer?@(e->tapBuffer):(id)NSNull.null,@"pcChannels":@(e->tapChannels),@"tapUID":e->tapUID.empty()?(id)NSNull.null:ns(e->tapUID),@"aggregateUID":e->aggregateUID.empty()?(id)NSNull.null:ns(e->aggregateUID),@"clipped":@(stats.clipped),@"nonFinite":@(stats.nonFinite+e->probeNonFinite.load()),@"fault":@(stats.fault?stats.fault:e->signals->rtFault.load()),@"probeCallbacks":@(e->probe?e->io[2].callbacks.load():0),@"probeFrames":@(e->probe?e->io[2].frames.load():0),@"probeFormat":e->tapChannels?formatJSON(e->tapFormat):(id)NSNull.null,@"captureContainer":@"private-tap-only",@"pcDeviceUID":ns(e->config.pcUID),@"pcStreamIndex":@(e->config.pcStream),@"selfProcessExcluded":@(!e->tapUID.empty()),@"requestedBufferFrames":@(e->config.buffer),@"unsafeTeardown":@(e->unsafeTeardown),@"tapActive":@(e->tap!=0),@"aggregateActive":@(e->aggregate!=0)}];
     NSMutableArray *sources=[NSMutableArray array];NSString *sourceNames[]={@"RME",@"PC",@"Return"};uint32_t counts[]={e->rme.inputs,e->tapChannels,2};int ios[]={0,2,1};
-    for(int i=0;i<3;++i){NSMutableArray *peaks=[NSMutableArray array];for(uint32_t ch=0;ch<counts[i]&&ch<MR_MAX_CHANNELS;++ch)[peaks addObject:@(stats.inputPeak[i][ch])];[sources addObject:@{@"name":sourceNames[i],@"callbacks":@(e->io[ios[i]].callbacks.load()),@"frames":@(stats.inputFrames[i]),@"fifoFrames":@(stats.fifoFrames[i]),@"fifoMin":@(stats.fifoMin[i]),@"fifoMax":@(stats.fifoMax[i]),@"underruns":@(stats.underruns[i]),@"overflows":@(stats.overflows[i]),@"startupDiscardedFrames":@(stats.startupDiscardedFrames[i]),@"ppm":@(stats.correctionPPM[i]),@"peaks":peaks}];}
+    for(int i=0;i<3;++i){NSMutableArray *peaks=[NSMutableArray array], *gates=[NSMutableArray array];for(uint32_t ch=0;ch<counts[i]&&ch<MR_MAX_CHANNELS;++ch){[peaks addObject:@(stats.inputPeak[i][ch])];[gates addObject:@(stats.gateGain[i][ch])];}[sources addObject:@{@"name":sourceNames[i],@"callbacks":@(e->io[ios[i]].callbacks.load()),@"frames":@(stats.inputFrames[i]),@"fifoFrames":@(stats.fifoFrames[i]),@"fifoMin":@(stats.fifoMin[i]),@"fifoMax":@(stats.fifoMax[i]),@"underruns":@(stats.underruns[i]),@"overflows":@(stats.overflows[i]),@"startupDiscardedFrames":@(stats.startupDiscardedFrames[i]),@"ppm":@(stats.correctionPPM[i]),@"peaks":peaks,@"gateGains":gates}];}
     result[@"sources"]=sources;result[@"outputPeaks"]=@[@(stats.outputPeak[0]),@(stats.outputPeak[1])];result[@"primedMask"]=@(stats.primedMask);result[@"teardownDiagnostic"]=e->teardownDiagnostic.empty()?(id)NSNull.null:ns(e->teardownDiagnostic);
     result[@"ioTiming"]=ioTimingJSON(e);
+    if(stats.clockFailure.valid){
+        const auto &clock=stats.clockFailure;auto finiteNumber=[](double value)->id{return std::isfinite(value)?(id)@(value):NSNull.null;};
+        result[@"clockFailure"]=@{@"tracker":@(clock.tracker),@"trackerName":ns(clockTrackerName(clock.tracker)),@"reason":@(clock.reason),@"previousValid":@(clock.previousValid),@"previousFrames":@(clock.previousFrames),@"previousSampleTime":finiteNumber(clock.previousSampleTime),@"expectedSampleTime":finiteNumber(clock.expectedSampleTime),@"currentSampleTime":finiteNumber(clock.currentSampleTime),@"previousHostSeconds":finiteNumber(clock.previousHostSeconds),@"currentHostSeconds":finiteNumber(clock.currentHostSeconds)};
+    }
     if(e->state=="fault")result[@"timestampTrace"]=timestampTraceJSON(e);
     NSMutableArray *peaks=[NSMutableArray array];if(e->probe)for(uint32_t ch=0;ch<e->tapChannels;++ch)[peaks addObject:@(e->probePeaks[ch].load())];result[@"probePeaks"]=peaks;return result;
 }
 }
 extern "C" char *mr_inventory_json(void){@autoreleasepool{NSMutableArray *devices=[NSMutableArray array];for(auto id:list<AudioObjectID>(kAudioObjectSystemObject,kAudioHardwarePropertyDevices))[devices addObject:inventoryDevice(id)];AudioObjectID output=0,system=0;get(kAudioObjectSystemObject,kAudioHardwarePropertyDefaultOutputDevice,output);get(kAudioObjectSystemObject,kAudioHardwarePropertyDefaultSystemOutputDevice,system);return jsonString(@{@"devices":devices,@"defaultOutputUID":stringProperty(output,kAudioDevicePropertyDeviceUID)?:(id)NSNull.null,@"systemOutputUID":stringProperty(system,kAudioDevicePropertyDeviceUID)?:(id)NSNull.null,@"error":NSNull.null});}}
 extern "C" void mr_string_free(char *p){free(p);}
+extern "C" int mr_validate_config_json(const char *json,char *error,size_t size){@autoreleasepool{Config config;std::string why;bool ok=false;try{ok=parse(json,config,false,why);}catch(const std::exception &x){why=x.what();}catch(...){why="Unexpected configuration validation error";}errorOut(error,size,why);return ok?0:1;}}
 extern "C" MREngine *mr_engine_create(void){try{return new MREngine;}catch(...){return nullptr;}}
 extern "C" void mr_engine_destroy(MREngine *e){if(!e)return;@autoreleasepool{fadeBeforeStop(e);if(stop(e))delete e;}}
 extern "C" int mr_engine_start(MREngine *e,const char *json,char *error,size_t size){if(!e){errorOut(error,size,"Engine is null");return 1;}@autoreleasepool{std::string why;bool ok=false;try{ok=begin(e,json,false,why);}catch(const std::exception &x){why=x.what();}catch(...){why="Unexpected engine setup error";}if(!ok){e->error=why;stop(e);e->state="fault";errorOut(error,size,e->error);return 1;}errorOut(error,size,"");return 0;}}
@@ -639,3 +716,25 @@ extern "C" void mr_engine_stop(MREngine *e){if(!e)return;@autoreleasepool{fadeBe
 extern "C" void mr_engine_set_channel(MREngine *e,uint32_t source,uint32_t channel,float gain,float pan,int muted){if(!e||!e->core||source>1||!std::isfinite(gain)||gain<-96||gain>12||!std::isfinite(pan)||pan<-1||pan>1)return;uint32_t count=source==0?e->rme.inputs:e->tapChannels;if(channel>=count)return;mr_core_set_channel(e->core,source,channel,gain,pan,muted!=0);}
 extern "C" void mr_engine_set_master(MREngine *e,float forward,float returning,int muted){if(!e||!e->core||!std::isfinite(forward)||forward<-96||forward>12||!std::isfinite(returning)||returning<-96||returning>12)return;mr_core_set_master(e->core,forward,returning,muted!=0);}
 extern "C" char *mr_engine_status_json(MREngine *e){@autoreleasepool{if(!e)return jsonString(@{@"state":@"fault",@"error":@"Engine is null"});return jsonString(snapshot(e));}}
+
+extern "C" void mr_engine_set_gate(MREngine *e,uint32_t source,uint32_t channel,int enabled,float threshold,float attack,float hold,float release,float hysteresis){
+    if(!e||!e->core||source>2)return;
+    uint32_t count=source==0?e->rme.inputs:(source==1?e->tapChannels:2);if(channel>=count)return;
+    // Reject malformed external control values before they can fault an active core.
+    if(!std::isfinite(threshold)||threshold<-96||threshold>0||!std::isfinite(attack)||attack<0.1f||attack>50||
+       !std::isfinite(hold)||hold<0||hold>1000||!std::isfinite(release)||release<1||release>2000||
+       !std::isfinite(hysteresis)||hysteresis<0||hysteresis>24)return;
+    MRGateSettings gate{enabled!=0,threshold,attack,hold,release,hysteresis};mr_core_set_gate(e->core,source,channel,&gate);
+}
+extern "C" void mr_engine_copy_meters(MREngine *e,MRMeterLevels *out){
+    static_assert(MR_METER_CHANNELS==MR_MAX_CHANNELS,"meter ABI channel count");
+    if(!out)return;std::memset(out,0,sizeof(*out));if(!e||!e->active)return;
+    out->channelCounts[0]=e->rme.inputs;out->channelCounts[1]=e->tapChannels;out->channelCounts[2]=2;
+    if(e->probe){out->active=1;for(uint32_t c=0;c<e->tapChannels&&c<MR_METER_CHANNELS;++c)out->inputPeaks[MR_METER_CHANNELS+c]=e->probePeaks[c].load(std::memory_order_relaxed);return;}
+    if(!e->core)return;MRCoreStats stats{};mr_core_snapshot(e->core,&stats);
+    if(stats.fault||e->signals->rtFault.load(std::memory_order_relaxed))return;
+    out->active=1;
+    std::memcpy(out->inputPeaks,stats.inputPeak,sizeof(out->inputPeaks));
+    std::memcpy(out->gateGains,stats.gateGain,sizeof(out->gateGains));
+    std::memcpy(out->outputPeaks,stats.outputPeak,sizeof(out->outputPeaks));
+}

@@ -1,0 +1,3 @@
+PASS all five clock identities, exact first-failure values/reasons, immutable record and unchanged timestamp acceptance
+PASS concurrent clock failures and snapshots publish one complete immutable record (100 races)
+PASS negative sample origins, zero crossing, independent timelines and strict running reset

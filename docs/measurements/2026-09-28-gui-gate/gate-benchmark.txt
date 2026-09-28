@@ -1,0 +1,19 @@
+BENCH GateOFF B16 20+20+2 RME us mean=2.312 p50=2.292 p99=2.541 max=37.292 callbacks=30000
+BENCH GateOFF B16 20+20+2 PC us mean=1.285 p50=1.291 p99=1.417 max=27.375 callbacks=30000
+BENCH GateOFF B16 20+20+2 D4 us mean=2.114 p50=2.125 p99=2.333 max=38.667 callbacks=30000
+BENCH GateON B16 20+20+2 RME us mean=2.385 p50=2.375 p99=2.708 max=29.833 callbacks=30000
+BENCH GateON B16 20+20+2 PC us mean=1.387 p50=1.375 p99=1.667 max=26.459 callbacks=30000
+BENCH GateON B16 20+20+2 D4 us mean=2.050 p50=2.042 p99=2.208 max=38.875 callbacks=30000
+BENCH GateOFF B32 20+20+2 RME us mean=4.645 p50=4.625 p99=4.792 max=31.833 callbacks=30000
+BENCH GateOFF B32 20+20+2 PC us mean=2.695 p50=2.667 p99=2.792 max=33.916 callbacks=30000
+BENCH GateOFF B32 20+20+2 D4 us mean=3.994 p50=3.959 p99=4.250 max=36.500 callbacks=30000
+BENCH GateON B32 20+20+2 RME us mean=4.870 p50=4.833 p99=5.250 max=33.917 callbacks=30000
+BENCH GateON B32 20+20+2 PC us mean=2.892 p50=2.875 p99=3.167 max=19.375 callbacks=30000
+BENCH GateON B32 20+20+2 D4 us mean=4.069 p50=4.042 p99=4.375 max=37.000 callbacks=30000
+BENCH GateOFF B64 20+20+2 RME us mean=9.737 p50=9.708 p99=11.042 max=38.459 callbacks=30000
+BENCH GateOFF B64 20+20+2 PC us mean=5.859 p50=5.833 p99=6.625 max=34.708 callbacks=30000
+BENCH GateOFF B64 20+20+2 D4 us mean=7.926 p50=7.875 p99=9.000 max=37.541 callbacks=30000
+BENCH GateON B64 20+20+2 RME us mean=9.929 p50=9.834 p99=12.167 max=42.583 callbacks=30000
+BENCH GateON B64 20+20+2 PC us mean=6.028 p50=5.959 p99=7.417 max=31.958 callbacks=30000
+BENCH GateON B64 20+20+2 D4 us mean=8.028 p50=8.000 p99=9.834 max=31.833 callbacks=30000
+Offline CPU timings only: no hardware I/O, scheduling deadline, or end-to-end latency claim.
