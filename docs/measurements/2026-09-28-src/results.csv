@@ -1,0 +1,55 @@
+libsamplerate-0.2.2 (c) 2002-2008 Erik de Castro Lopo
+delay,mode,output_per_input,block_frames,first_output_after_input_frames,first_call_output_frames,first_B_output_after_input_frames,impulse_peak_output_index,impulse_peak_available_input_delay_frames,steady_input_minus_output_over_ratio_min,steady_input_minus_output_over_ratio_max,impulse_peak
+delay,Fastest Sinc Interpolator,0.9999000,1,21,1,21,1024,20,19.182718,19.797080,0.821393907
+delay,Fastest Sinc Interpolator,0.9999000,32,32,12,64,1024,31,19.182718,19.793979,0.821393907
+delay,Fastest Sinc Interpolator,0.9999000,64,64,44,128,1024,63,19.182718,19.790779,0.821393907
+delay,Fastest Sinc Interpolator,1.0000000,1,21,1,21,1024,20,20.000000,20.000000,0.831472397
+delay,Fastest Sinc Interpolator,1.0000000,32,32,12,64,1024,31,20.000000,20.000000,0.831472397
+delay,Fastest Sinc Interpolator,1.0000000,64,64,44,128,1024,63,20.000000,20.000000,0.831472397
+delay,Fastest Sinc Interpolator,1.0001000,1,21,2,21,1024,19,19.202980,19.817218,0.821477950
+delay,Fastest Sinc Interpolator,1.0001000,32,32,13,64,1024,31,19.206079,19.817218,0.821477950
+delay,Fastest Sinc Interpolator,1.0001000,64,64,45,128,1024,63,19.209279,19.817218,0.821477950
+delay,Medium Sinc Interpolator,0.9999000,1,48,1,48,1024,47,46.185419,46.799780,0.905613303
+delay,Medium Sinc Interpolator,0.9999000,32,64,17,96,1024,63,46.185419,46.796680,0.905613303
+delay,Medium Sinc Interpolator,0.9999000,64,64,17,128,1024,63,46.185419,46.793479,0.905613303
+delay,Medium Sinc Interpolator,1.0000000,1,48,1,48,1024,47,47.000000,47.000000,0.919063210
+delay,Medium Sinc Interpolator,1.0000000,32,64,17,96,1024,63,47.000000,47.000000,0.919063210
+delay,Medium Sinc Interpolator,1.0000000,64,64,17,128,1024,63,47.000000,47.000000,0.919063210
+delay,Medium Sinc Interpolator,1.0001000,1,48,2,48,1024,46,46.200280,46.814519,0.905706465
+delay,Medium Sinc Interpolator,1.0001000,32,64,18,96,1024,63,46.203380,46.814519,0.905706465
+delay,Medium Sinc Interpolator,1.0001000,64,64,18,128,1024,63,46.206579,46.814519,0.905706465
+delay,Best Sinc Interpolator,0.9999000,1,145,1,145,1024,144,143.195120,143.809481,0.950169265
+delay,Best Sinc Interpolator,0.9999000,32,160,16,192,1024,159,143.195120,143.806381,0.950169265
+delay,Best Sinc Interpolator,0.9999000,64,192,48,256,1024,191,143.195120,143.803180,0.950169265
+delay,Best Sinc Interpolator,1.0000000,1,145,1,145,1024,144,144.000000,144.000000,0.965728402
+delay,Best Sinc Interpolator,1.0000000,32,160,16,192,1024,159,144.000000,144.000000,0.965728402
+delay,Best Sinc Interpolator,1.0000000,64,192,48,256,1024,191,144.000000,144.000000,0.965728402
+delay,Best Sinc Interpolator,1.0001000,1,145,2,145,1024,143,143.190581,143.804820,0.950267375
+delay,Best Sinc Interpolator,1.0001000,32,160,17,192,1024,159,143.193681,143.804820,0.950267375
+delay,Best Sinc Interpolator,1.0001000,64,192,49,256,1024,191,143.196880,143.804820,0.950267375
+required,mode,output_per_input,target_output_frames,minimum_input_frames,actual_output_frames
+required,Fastest Sinc Interpolator,0.9999000,32,52,32
+required,Fastest Sinc Interpolator,0.9999000,64,84,64
+required,Fastest Sinc Interpolator,1.0000000,32,52,32
+required,Fastest Sinc Interpolator,1.0000000,64,84,64
+required,Fastest Sinc Interpolator,1.0001000,32,51,32
+required,Fastest Sinc Interpolator,1.0001000,64,83,64
+required,Medium Sinc Interpolator,0.9999000,32,79,32
+required,Medium Sinc Interpolator,0.9999000,64,111,64
+required,Medium Sinc Interpolator,1.0000000,32,79,32
+required,Medium Sinc Interpolator,1.0000000,64,111,64
+required,Medium Sinc Interpolator,1.0001000,32,78,32
+required,Medium Sinc Interpolator,1.0001000,64,110,64
+required,Best Sinc Interpolator,0.9999000,32,176,32
+required,Best Sinc Interpolator,0.9999000,64,208,64
+required,Best Sinc Interpolator,1.0000000,32,176,32
+required,Best Sinc Interpolator,1.0000000,64,208,64
+required,Best Sinc Interpolator,1.0001000,32,175,32
+required,Best Sinc Interpolator,1.0001000,64,207,64
+cpu,mode,block_frames,iterations,mean_us,p50_us,p99_us,p99_9_us,max_us,total_output_frames,short_calls
+cpu,Fastest Sinc Interpolator,32,20000,1.702890,1.708333,1.791667,2.166667,19.583333,640000,0
+cpu,Fastest Sinc Interpolator,64,20000,3.356038,3.333333,3.458333,4.208333,35.666667,1280000,0
+cpu,Medium Sinc Interpolator,32,20000,3.070452,3.041667,3.208333,3.833333,6.166667,640000,0
+cpu,Medium Sinc Interpolator,64,20000,6.083288,6.083333,6.375000,7.625000,12.750000,1280000,0
+cpu,Best Sinc Interpolator,32,20000,10.738602,10.708333,12.291667,13.416667,39.625000,640000,0
+cpu,Best Sinc Interpolator,64,20000,21.482927,21.375000,23.875000,26.291667,54.208333,1280000,0
